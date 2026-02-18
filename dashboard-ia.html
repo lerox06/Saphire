@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inspecteur Académique — Sterling</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bleu-france: #000091;
+            --rouge-marianne: #E1000F;
+            --blanc: #FFFFFF;
+            --gris-clair: #F6F6F6;
+            --gris-moyen: #666666;
+            --gris-texte: #3A3A3A;
+            --vert-succes: #18753C;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            background: var(--gris-clair);
+            color: var(--gris-texte);
+        }
+        .bandeau-bleu { height: 4px; background: linear-gradient(90deg, var(--bleu-france) 0%, var(--rouge-marianne) 100%); }
+        .header-officiel {
+            background: var(--blanc);
+            border-bottom: 3px solid var(--rouge-marianne);
+            padding: 20px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-left { display: flex; align-items: center; gap: 20px; }
+        .marianne {
+            width: 60px; height: 60px; border-radius: 50%; overflow: hidden;
+            flex-shrink: 0; border: 2px solid var(--rouge-marianne);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15); background: var(--blanc);
+        }
+        .marianne img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .header-info { display: flex; flex-direction: column; }
+        .header-title {
+            font-size: 15px; font-weight: 700; color: var(--rouge-marianne);
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .header-subtitle { font-size: 11px; color: var(--gris-moyen); text-transform: uppercase; margin-top: 4px; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .user-name { font-size: 13px; font-weight: 600; color: var(--bleu-france); }
+        .btn {
+            padding: 10px 20px; border: none; border-radius: 0; cursor: pointer;
+            font-size: 13px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.5px; transition: all 0.2s;
+        }
+        .btn-primary { background: var(--bleu-france); color: var(--blanc); }
+        .btn-primary:hover { background: #0000C0; }
+        .btn-danger { background: var(--rouge-marianne); color: var(--blanc); }
+        .btn-danger:hover { background: #C10000; }
+        .container { max-width: 1400px; margin: 24px auto; padding: 0 20px; }
+        .tabs {
+            display: flex; gap: 4px; background: var(--gris-clair);
+            border-bottom: 3px solid var(--rouge-marianne); margin-bottom: 24px;
+        }
+        .tab {
+            padding: 12px 24px; background: var(--gris-clair); border: none;
+            cursor: pointer; font-size: 12px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.5px; color: var(--gris-moyen);
+            transition: all 0.2s; border-radius: 0;
+        }
+        .tab.active { background: var(--blanc); color: var(--rouge-marianne); border-bottom: 3px solid var(--rouge-marianne); }
+        .tab:hover:not(.active) { background: #E8E8E8; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .card {
+            background: var(--blanc); border: 1px solid #E5E5E5;
+            padding: 28px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .card-title {
+            font-size: 15px; font-weight: 700; color: var(--rouge-marianne);
+            text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 18px;
+            padding-bottom: 12px; border-bottom: 2px solid var(--rouge-marianne);
+        }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th {
+            background: var(--gris-clair); padding: 11px 12px; text-align: left;
+            font-weight: 700; color: var(--rouge-marianne); text-transform: uppercase;
+            font-size: 11px; letter-spacing: 0.5px; border-bottom: 2px solid var(--rouge-marianne);
+        }
+        td { padding: 11px 12px; border-bottom: 1px solid #E5E5E5; }
+        tr:hover { background: #F9F9F9; }
+        .empty-state {
+            text-align: center; padding: 60px 20px; color: var(--gris-moyen);
+            font-size: 14px; font-style: italic;
+        }
+        .badge {
+            display: inline-block; padding: 3px 8px; font-size: 11px;
+            font-weight: 700; text-transform: uppercase;
+        }
+        .badge-active { background: #E8F5E9; color: var(--vert-succes); }
+        .badge-inactive { background: #FEE; color: var(--rouge-marianne); }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                 background: rgba(0,0,0,0.6); z-index: 9999; align-items: center; justify-content: center; }
+        .modal.show { display: flex; }
+        .modal-content { background: var(--blanc); min-width: 500px; max-width: 90%;
+                         max-height: 90vh; overflow-y: auto; border: 2px solid var(--rouge-marianne); }
+        .modal-header {
+            padding: 20px 24px; border-bottom: 1px solid #E5E5E5;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-title { font-size: 15px; font-weight: 700; color: var(--rouge-marianne);
+                       text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-close {
+            background: none; border: none; font-size: 28px; cursor: pointer;
+            color: var(--gris-moyen); line-height: 1; padding: 0; width: 32px; height: 32px;
+        }
+        .btn-close:hover { color: var(--rouge-marianne); }
+        .fiche-prof-section { margin-bottom: 24px; }
+        .fiche-prof-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr);
+            gap: 16px; font-size: 13px;
+        }
+        .stat-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card {
+            padding: 18px 20px; color: var(--blanc);
+            background: linear-gradient(135deg, var(--bleu-france), #0000C0);
+            border-left: 4px solid var(--rouge-marianne);
+        }
+        .stat-card.rouge { background: linear-gradient(135deg, var(--rouge-marianne), #C10000); border-left-color: var(--bleu-france); }
+        .stat-card.vert { background: linear-gradient(135deg, var(--vert-succes), #105528); border-left-color: var(--rouge-marianne); }
+        .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9; margin-bottom: 6px; }
+        .stat-value { font-size: 30px; font-weight: 700; }
+        .form-textarea { width: 100%; padding: 10px 12px; border: 1px solid #E5E5E5;
+                         font-family: inherit; font-size: 13px; }
+        .form-textarea:focus { outline: none; border-color: var(--bleu-france); }
+        .alert { padding: 12px 16px; margin-bottom: 16px; display: none; font-size: 13px; }
+        .alert.show { display: block; }
+        .alert-success { background: #E8F5E9; color: var(--vert-succes); border-left: 4px solid var(--vert-succes); }
+        .alert-error { background: #FEE; color: var(--rouge-marianne); border-left: 4px solid var(--rouge-marianne); }
+    </style>
+</head>
+<body>
+    <div class="bandeau-bleu"></div>
+    
+    <div class="header-officiel">
+        <div class="header-left">
+            <div class="marianne"><img src="logo-sterling.png" alt="Académie Sterling"></div>
+            <div class="header-info">
+                <div class="header-title">Académie Sterling</div>
+                <div class="header-subtitle">Espace Inspecteur Académique</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <span class="user-name" id="userName">Chargement...</span>
+            <button class="btn btn-danger" onclick="logout()">Déconnexion</button>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('inspections')">Demandes d'Inspection</button>
+            <button class="tab" onclick="switchTab('professeurs')">Professeurs</button>
+            <button class="tab" onclick="switchTab('sanctions')">Sanctions</button>
+        </div>
+        
+        <!-- Onglet Inspections -->
+        <div id="tab-inspections" class="tab-content active">
+            <div class="card">
+                <h2 class="card-title">Demandes d'Inspection</h2>
+                <div id="inspectionsStats" class="stat-cards"></div>
+                <div id="inspectionsTable"></div>
+            </div>
+        </div>
+
+        <!-- Onglet Professeurs -->
+        <div id="tab-professeurs" class="tab-content">
+            <div class="card">
+                <h2 class="card-title">Professeurs</h2>
+                <div id="professeursTable"></div>
+            </div>
+        </div>
+
+        <!-- Onglet Sanctions -->
+        <div id="tab-sanctions" class="tab-content">
+            <div class="card">
+                <h2 class="card-title">Sanctions</h2>
+                <div id="sanctionsTable"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Fiche Professeur -->
+    <div id="ficheProfModal" class="modal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Fiche Professeur</h3>
+                <button class="btn-close" onclick="closeFicheProf()">&times;</button>
+            </div>
+            <div style="padding: 24px;" id="ficheProfContent"></div>
+        </div>
+    </div>
+
+    <!-- Modal Programmer Inspection -->
+    <div id="programmerModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Programmer l'Inspection</h3>
+                <button class="btn-close" onclick="closeProgrammerModal()">&times;</button>
+            </div>
+            <div style="padding: 24px;">
+                <div id="programmerAlert" class="alert"></div>
+                <div style="margin-bottom:16px;">
+                    <label style="display:block;font-weight:700;margin-bottom:8px;font-size:12px;">Date programmée *</label>
+                    <input type="date" id="programmerDate" class="form-input" style="width:100%;padding:10px 12px;border:1px solid #E5E5E5;">
+                </div>
+                <div style="display:flex;gap:12px;justify-content:flex-end;">
+                    <button class="btn" onclick="closeProgrammerModal()" style="background:var(--gris-clair);color:var(--gris-moyen);padding:10px 20px;">Annuler</button>
+                    <button class="btn btn-primary" onclick="saveProgrammer()" style="padding:10px 20px;">Programmer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Rapport Inspection -->
+    <div id="rapportModal" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Rédiger Rapport d'Inspection</h3>
+                <button class="btn-close" onclick="closeRapportModal()">&times;</button>
+            </div>
+            <div style="padding: 24px;">
+                <div id="rapportAlert" class="alert"></div>
+                <p style="margin-bottom:16px;font-size:13px;">Professeur : <strong id="rapportProfNom"></strong></p>
+                <p style="margin-bottom:16px;font-size:13px;">Date programmée : <strong id="rapportDate"></strong></p>
+                <div style="margin-bottom:16px;">
+                    <label style="display:block;font-weight:700;margin-bottom:8px;font-size:12px;color:var(--rouge-marianne);">Rapport *</label>
+                    <textarea id="rapportTexte" class="form-textarea" rows="8" placeholder="Rédigez votre rapport d'inspection..."></textarea>
+                </div>
+                <div style="display:flex;gap:12px;justify-content:flex-end;">
+                    <button class="btn" onclick="closeRapportModal()" style="background:var(--gris-clair);color:var(--gris-moyen);">Annuler</button>
+                    <button class="btn btn-primary" onclick="saveRapport()">Enregistrer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let currentInspectionId = null;
+
+        async function checkSession() {
+            try {
+                const response = await fetch('auth.php?action=check_session');
+                const data = await response.json();
+                if (!data.logged_in || !['IA','IA_DASEN'].includes(data.role)) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+                currentUser = data;
+                document.getElementById('userName').textContent = `${data.prenom} ${data.nom}`;
+                await Promise.all([
+                    loadInspections(),
+                    loadProfesseurs(),
+                    loadSanctions()
+                ]);
+            } catch(e) { window.location.href = 'index.html'; }
+        }
+
+        async function logout() {
+            const fd = new FormData();
+            fd.append('action', 'logout');
+            await fetch('auth.php', { method: 'POST', body: fd });
+            window.location.href = 'index.html';
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(`tab-${tab}`).classList.add('active');
+        }
+
+        // ========== INSPECTIONS ==========
+        async function loadInspections() {
+            try {
+                let url = 'api/inspections.php';
+                if (currentUser.role === 'IA' && currentUser.id_etablissement) {
+                    url += `?id_etablissement=${currentUser.id_etablissement}`;
+                }
+                const r = await fetch(url);
+                const d = await r.json();
+                displayInspections(d.success ? d.data : []);
+            } catch(e) { console.error('Erreur inspections:', e); }
+        }
+
+        function displayInspections(inspections) {
+            // Stats
+            const total      = inspections.length;
+            const enAttente  = inspections.filter(i => i.statut === 'en_attente').length;
+            const programmee = inspections.filter(i => i.statut === 'programmee').length;
+            const realisee   = inspections.filter(i => i.statut === 'realisee').length;
+
+            document.getElementById('inspectionsStats').innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-label">Total</div>
+                    <div class="stat-value">${total}</div>
+                </div>
+                <div class="stat-card rouge">
+                    <div class="stat-label">En attente</div>
+                    <div class="stat-value">${enAttente}</div>
+                </div>
+                <div class="stat-card vert">
+                    <div class="stat-label">Programmées</div>
+                    <div class="stat-value">${programmee}</div>
+                </div>
+            `;
+
+            const container = document.getElementById('inspectionsTable');
+            if (!inspections.length) {
+                container.innerHTML = '<div class="empty-state">Aucune demande d\'inspection</div>';
+                return;
+            }
+
+            const badgeStatut = s => ({
+                'en_attente': '<span class="badge badge-inactive">En attente</span>',
+                'programmee': '<span class="badge" style="background:#E8EAF6;color:#000091;">Programmée</span>',
+                'realisee':   '<span class="badge badge-active">Réalisée</span>',
+                'annulee':    '<span class="badge" style="background:#E5E5E5;color:#666;">Annulée</span>'
+            }[s] || s);
+
+            let html = `<table><thead><tr>
+                <th>Date demande</th><th>Professeur</th><th>Établissement</th>
+                <th>Type</th><th>Statut</th><th>Date programmée</th><th>Actions</th>
+            </tr></thead><tbody>`;
+            inspections.forEach(i => {
+                const dateP = i.date_programmee ? new Date(i.date_programmee).toLocaleDateString('fr-FR') : '—';
+                html += `<tr>
+                    <td>${new Date(i.date_demande).toLocaleDateString('fr-FR')}</td>
+                    <td><strong>${i.prof_nom} ${i.prof_prenom}</strong><br><small style="color:#666;">${i.discipline_enseignee}</small></td>
+                    <td>${i.nom_etablissement}</td>
+                    <td>${i.type_inspection}</td>
+                    <td>${badgeStatut(i.statut)}</td>
+                    <td>${dateP}</td>
+                    <td class="actions">
+                        <button class="btn btn-primary" style="font-size:11px;padding:6px 12px;" onclick="showFicheProf(${i.id_professeur})">Fiche</button>
+                        ${i.statut === 'en_attente' ? `<button class="btn" style="background:#000091;color:#fff;font-size:11px;padding:6px 12px;" onclick="showProgrammer(${i.id_inspection})">📅 Programmer</button>` : ''}
+                        ${i.statut === 'programmee' ? `<button class="btn" style="background:var(--vert-succes);color:#fff;font-size:11px;padding:6px 12px;" onclick="showRapport(${i.id_inspection}, '${i.prof_nom} ${i.prof_prenom}', '${dateP}')">✍ Rapport</button>` : ''}
+                        ${i.statut === 'realisee' && i.commentaire ? `<button class="btn" style="background:#666;color:#fff;font-size:11px;padding:6px 12px;" onclick="exportRapportPDF(${i.id_inspection})">📄 PDF</button>` : ''}
+                    </td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        let currentProgrammerId = null;
+
+        function showProgrammer(idInspection) {
+            currentProgrammerId = idInspection;
+            document.getElementById('programmerDate').value = '';
+            document.getElementById('programmerAlert').className = 'alert';
+            document.getElementById('programmerModal').classList.add('show');
+        }
+
+        function closeProgrammerModal() {
+            document.getElementById('programmerModal').classList.remove('show');
+        }
+
+        async function saveProgrammer() {
+            const date = document.getElementById('programmerDate').value;
+            if (!date) {
+                showAlert('programmerAlert', 'Date requise', 'error');
+                return;
+            }
+            const fd = new FormData();
+            fd.append('_method', 'PUT');
+            fd.append('id', currentProgrammerId);
+            fd.append('statut', 'programmee');
+            fd.append('date_programmee', date);
+            try {
+                const r = await fetch('api/inspections.php', { method: 'POST', body: fd });
+                const d = await r.json();
+                if (d.success) {
+                    showAlert('programmerAlert', '✓ Inspection programmée !', 'success');
+                    setTimeout(() => { closeProgrammerModal(); loadInspections(); }, 1500);
+                } else {
+                    showAlert('programmerAlert', d.message || 'Erreur', 'error');
+                }
+            } catch(e) { showAlert('programmerAlert', 'Erreur serveur', 'error'); }
+        }
+
+        function showRapport(idInspection, nomProf, dateP) {
+            currentInspectionId = idInspection;
+            document.getElementById('rapportProfNom').textContent = nomProf;
+            document.getElementById('rapportDate').textContent = dateP;
+            document.getElementById('rapportTexte').value = '';
+            document.getElementById('rapportAlert').className = 'alert';
+            document.getElementById('rapportModal').classList.add('show');
+        }
+
+        function closeRapportModal() {
+            document.getElementById('rapportModal').classList.remove('show');
+        }
+
+        async function saveRapport() {
+            const texte = document.getElementById('rapportTexte').value.trim();
+            if (!texte) {
+                showAlert('rapportAlert', 'Le rapport est requis', 'error');
+                return;
+            }
+            const fd = new FormData();
+            fd.append('_method', 'PUT');
+            fd.append('id', currentInspectionId);
+            fd.append('statut', 'realisee');
+            fd.append('commentaire', texte);
+            try {
+                const r = await fetch('api/inspections.php', { method: 'POST', body: fd });
+                const d = await r.json();
+                if (d.success) {
+                    showAlert('rapportAlert', '✓ Rapport enregistré !', 'success');
+                    setTimeout(() => { closeRapportModal(); loadInspections(); }, 1500);
+                } else {
+                    showAlert('rapportAlert', d.message || 'Erreur', 'error');
+                }
+            } catch(e) { showAlert('rapportAlert', 'Erreur serveur', 'error'); }
+        }
+
+        // ========== PROFESSEURS ==========
+        async function loadProfesseurs() {
+            try {
+                let url = 'api/professeurs.php';
+                if (currentUser.role === 'IA' && currentUser.id_etablissement) {
+                    url += `?id_etablissement=${currentUser.id_etablissement}`;
+                }
+                const r = await fetch(url);
+                const d = await r.json();
+                displayProfesseurs(d.success ? d.data : []);
+            } catch(e) { console.error('Erreur profs:', e); }
+        }
+
+        function displayProfesseurs(profs) {
+            const container = document.getElementById('professeursTable');
+            if (!profs.length) {
+                container.innerHTML = '<div class="empty-state">Aucun professeur</div>';
+                return;
+            }
+            let html = `<table><thead><tr>
+                <th>Nom</th><th>Prénom</th><th>Établissement</th>
+                <th>Discipline</th><th>Échelon</th><th>Statut</th><th>Actions</th>
+            </tr></thead><tbody>`;
+            profs.forEach(p => {
+                html += `<tr>
+                    <td>${p.nom}</td>
+                    <td>${p.prenom}</td>
+                    <td>${p.nom_etablissement}</td>
+                    <td>${p.discipline_enseignee}</td>
+                    <td>${p.echelon || '—'}</td>
+                    <td><span class="badge badge-${p.statut === 'actif' ? 'active' : 'inactive'}">${p.statut}</span></td>
+                    <td class="actions">
+                        <button class="btn btn-primary" style="font-size:11px;padding:6px 12px;" onclick="showFicheProf(${p.id_professeur})">Voir fiche</button>
+                    </td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        async function showFicheProf(idProf) {
+            try {
+                const [profR, notR, sanctR] = await Promise.all([
+                    fetch(`api/professeurs.php?id=${idProf}`),
+                    fetch(`api/notations.php?id_professeur=${idProf}&annee=${new Date().getFullYear()}`),
+                    fetch(`api/sanctions.php?id_professeur=${idProf}`)
+                ]);
+                const profD = await profR.json();
+                const notD  = await notR.json();
+                const sanctD = await sanctR.json();
+
+                if (!profD.success || !profD.data.length) return;
+                const prof = profD.data[0];
+                const notations = notD.success ? notD.data.slice(0, 5) : [];
+                const sanctions = sanctD.success ? sanctD.data : [];
+
+                let html = `
+                    <div class="fiche-prof-section">
+                        <h4 style="color:var(--rouge-marianne);margin-bottom:12px;">INFORMATIONS</h4>
+                        <div class="fiche-prof-grid">
+                            <div><strong>Nom :</strong> ${prof.nom}</div>
+                            <div><strong>Prénom :</strong> ${prof.prenom}</div>
+                            <div><strong>Établissement :</strong> ${prof.nom_etablissement}</div>
+                            <div><strong>Discipline :</strong> ${prof.discipline_enseignee}</div>
+                            <div><strong>Échelon :</strong> ${prof.echelon || '—'}</div>
+                            <div><strong>Statut :</strong> <span class="badge badge-${prof.statut === 'actif' ? 'active' : 'inactive'}">${prof.statut}</span></div>
+                        </div>
+                    </div>
+                `;
+
+                if (notations.length) {
+                    html += `<div class="fiche-prof-section">
+                        <h4 style="color:var(--rouge-marianne);margin-bottom:12px;">DERNIÈRES NOTATIONS</h4>
+                        <table style="width:100%;font-size:12px;">
+                            <thead><tr><th>Semaine</th><th>Appels</th><th>CDT</th><th>Total</th></tr></thead><tbody>`;
+                    notations.forEach(n => {
+                        html += `<tr>
+                            <td>${n.semaine}</td>
+                            <td>${n.note_appels}/10</td>
+                            <td>${n.note_cdt}/10</td>
+                            <td><strong>${n.note_totale}/20</strong></td>
+                        </tr>`;
+                    });
+                    html += '</tbody></table></div>';
+                }
+
+                if (sanctions.length) {
+                    html += `<div class="fiche-prof-section">
+                        <h4 style="color:var(--rouge-marianne);margin-bottom:12px;">SANCTIONS (${sanctions.length})</h4>
+                        <table style="width:100%;font-size:12px;">
+                            <thead><tr><th>Date</th><th>Type</th><th>Motif</th><th>Statut</th></tr></thead><tbody>`;
+                    sanctions.forEach(s => {
+                        html += `<tr>
+                            <td>${new Date(s.date_sanction).toLocaleDateString('fr-FR')}</td>
+                            <td>${s.type_sanction}</td>
+                            <td>${s.motif}</td>
+                            <td>${s.statut}</td>
+                        </tr>`;
+                    });
+                    html += '</tbody></table></div>';
+                }
+
+                document.getElementById('ficheProfContent').innerHTML = html;
+                document.getElementById('ficheProfModal').classList.add('show');
+            } catch(e) { console.error(e); }
+        }
+
+        function closeFicheProf() {
+            document.getElementById('ficheProfModal').classList.remove('show');
+        }
+
+        // ========== SANCTIONS ==========
+        async function loadSanctions() {
+            try {
+                let url = 'api/sanctions.php';
+                if (currentUser.role === 'IA' && currentUser.id_etablissement) {
+                    url += `?id_etablissement=${currentUser.id_etablissement}`;
+                }
+                const r = await fetch(url);
+                const d = await r.json();
+                displaySanctions(d.success ? d.data : []);
+            } catch(e) { console.error('Erreur sanctions:', e); }
+        }
+
+        function displaySanctions(sanctions) {
+            const container = document.getElementById('sanctionsTable');
+            if (!sanctions.length) {
+                container.innerHTML = '<div class="empty-state">Aucune sanction</div>';
+                return;
+            }
+            let html = `<table><thead><tr>
+                <th>Date</th><th>Professeur</th><th>Établissement</th>
+                <th>Type</th><th>Motif</th><th>Émis par</th><th>Statut</th>
+            </tr></thead><tbody>`;
+            sanctions.forEach(s => {
+                html += `<tr>
+                    <td>${new Date(s.date_sanction).toLocaleDateString('fr-FR')}</td>
+                    <td><strong>${s.prof_nom} ${s.prof_prenom}</strong></td>
+                    <td>${s.nom_etablissement}</td>
+                    <td>${s.type_sanction}</td>
+                    <td>${s.motif}</td>
+                    <td>${s.emetteur_prenom} ${s.emetteur_nom}</td>
+                    <td>${s.statut}</td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function exportRapportPDF(idInspection) {
+            window.open(`api/export_pdf_rapport.php?id=${idInspection}`, '_blank');
+        }
+
+        function showAlert(id, msg, type) {
+            const el = document.getElementById(id);
+            el.textContent = msg;
+            el.className = `alert alert-${type} show`;
+            setTimeout(() => el.className = 'alert', 6000);
+        }
+
+        checkSession();
+    </script>
+</body>
+</html>

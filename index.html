@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion — Académie Sterling</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bleu-france: #000091;
+            --rouge-marianne: #E1000F;
+            --blanc: #FFFFFF;
+            --gris-clair: #F6F6F6;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            background: linear-gradient(135deg, var(--bleu-france) 0%, var(--rouge-marianne) 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .login-container {
+            background: var(--blanc);
+            max-width: 450px;
+            width: 100%;
+            border: 2px solid var(--rouge-marianne);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+        .login-header {
+            background: linear-gradient(135deg, var(--bleu-france), var(--rouge-marianne));
+            color: var(--blanc);
+            padding: 32px 28px;
+            text-align: center;
+        }
+        .logo-circle {
+            width: 80px;
+            height: 80px;
+            background: var(--blanc);
+            border-radius: 50%;
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .logo-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+        .login-title {
+            font-size: 18px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+        .login-subtitle {
+            font-size: 12px;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .login-body {
+            padding: 32px 28px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--rouge-marianne);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #E5E5E5;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--bleu-france);
+        }
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: var(--bleu-france);
+            color: var(--blanc);
+            border: none;
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-login:hover:not(:disabled) {
+            background: #0000C0;
+        }
+        .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .alert {
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            border-left: 4px solid;
+            font-size: 13px;
+            display: none;
+        }
+        .alert.show {
+            display: block;
+        }
+        .alert-success {
+            background: #E8F5E9;
+            color: #18753C;
+            border-color: #18753C;
+        }
+        .alert-error {
+            background: #FEE;
+            color: var(--rouge-marianne);
+            border-color: var(--rouge-marianne);
+        }
+        .login-footer {
+            padding: 20px 28px;
+            background: var(--gris-clair);
+            text-align: center;
+            font-size: 11px;
+            color: #666;
+            border-top: 1px solid #E5E5E5;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <div class="logo-circle">
+                <img src="logo-sterling.png" alt="Académie Sterling" onerror="this.style.display='none'">
+            </div>
+            <div class="login-title">Académie Sterling</div>
+            <div class="login-subtitle">Système de gestion RH</div>
+        </div>
+        
+        <div class="login-body">
+            <div id="alert" class="alert"></div>
+            
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="email" class="form-label">Email *</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        class="form-input" 
+                        placeholder="votre.email@sterling.edu" 
+                        required 
+                        autocomplete="username"
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label for="password" class="form-label">Mot de passe *</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        class="form-input" 
+                        placeholder="••••••••" 
+                        required 
+                        autocomplete="current-password"
+                    >
+                </div>
+                
+                <button type="submit" id="loginBtn" class="btn-login">
+                    Se Connecter
+                </button>
+            </form>
+        </div>
+        
+        <div class="login-footer">
+            © 2026 Académie Sterling — Système RH
+        </div>
+    </div>
+
+    <script>
+        function showAlert(message, type = 'error') {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert alert-${type} show`;
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    alert.className = 'alert';
+                }, 3000);
+            }
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const loginBtn = document.getElementById('loginBtn');
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Connexion en cours...';
+            
+            try {
+                const formData = new FormData();
+                formData.append('action', 'login');
+                formData.append('email', email);
+                formData.append('password', password);
+                
+                const response = await fetch('auth.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert('Connexion réussie. Redirection...', 'success');
+                    
+                    setTimeout(() => {
+                        if (data.user.role === 'DRH') {
+                            window.location.href = 'dashboard-drh.html';
+                        } else if (data.user.role === 'PROFESSEUR') {
+                            window.location.href = 'dashboard-prof.html';
+                        } else if (data.user.role === 'IA' || data.user.role === 'IA_DASEN') {
+                            window.location.href = 'dashboard-ia.html';
+                        } else {
+                            window.location.href = 'dashboard-ce.html';
+                        }
+                    }, 1000);
+                } else {
+                    showAlert(data.message || 'Identifiants incorrects');
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = 'Se Connecter';
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                showAlert('Erreur de connexion. Veuillez réessayer.');
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Se Connecter';
+            }
+        }
+
+        // Vérifier si déjà connecté
+        async function checkExistingSession() {
+            try {
+                const response = await fetch('auth.php?action=check_session');
+                const data = await response.json();
+                
+                if (data.logged_in) {
+                    if (data.role === 'DRH') {
+                        window.location.href = 'dashboard-drh.html';
+                    } else if (data.role === 'PROFESSEUR') {
+                        window.location.href = 'dashboard-prof.html';
+                    } else if (data.role === 'IA' || data.role === 'IA_DASEN') {
+                        window.location.href = 'dashboard-ia.html';
+                    } else {
+                        window.location.href = 'dashboard-ce.html';
+                    }
+                }
+            } catch (error) {
+                console.error('Erreur check session:', error);
+            }
+        }
+
+        checkExistingSession();
+    </script>
+</body>
+</html>

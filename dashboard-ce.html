@@ -1,0 +1,2013 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Chef d'Établissement - Académie Sterling</title>
+    <style>
+        :root {
+            --bleu-france: #000091;
+            --rouge-marianne: #E1000F;
+            --gris-texte: #3A3A3A;
+            --gris-clair: #E5E5E5;
+            --gris-moyen: #666666;
+            --blanc: #FFFFFF;
+            --vert-valide: #18753C;
+            --orange-warning: #FF9940;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background: #F6F6F6;
+            color: var(--gris-texte);
+        }
+        
+        .bandeau-bleu { height: 4px; background: linear-gradient(90deg, var(--bleu-france) 0%, var(--rouge-marianne) 100%); }
+        
+        .header-officiel {
+            background: var(--blanc);
+            border-bottom: 3px solid var(--bleu-france);
+            padding: 16px 24px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 20px; }
+        
+        .marianne {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+            border: 2px solid var(--rouge-marianne);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            background: var(--blanc);
+        }
+        .marianne img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            display: block;
+        }
+        
+        .header-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--bleu-france);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .header-subtitle {
+            font-size: 11px;
+            color: var(--gris-moyen);
+            margin-top: 4px;
+            text-transform: uppercase;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .user-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gris-texte);
+            text-align: right;
+        }
+        
+        .user-role {
+            font-size: 11px;
+            color: var(--gris-moyen);
+            text-transform: uppercase;
+        }
+        
+        .btn-logout {
+            padding: 8px 16px;
+            background: var(--rouge-marianne);
+            color: var(--blanc);
+            border: none;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn-logout:hover { background: #C10000; }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 24px;
+            border-bottom: 3px solid var(--bleu-france);
+            background: var(--blanc);
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            background: var(--gris-clair);
+            border: none;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gris-moyen);
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+        }
+        
+        .tab:hover { background: #D5D5D5; }
+        .tab.active { background: var(--blanc); color: var(--bleu-france); }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease-out; }
+        
+        .card {
+            background: var(--blanc);
+            border: 1px solid var(--gris-clair);
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--bleu-france);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--bleu-france);
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary { background: var(--bleu-france); color: var(--blanc); }
+        .btn-primary:hover { background: #000070; }
+        .btn-success { background: var(--vert-valide); color: var(--blanc); }
+        .btn-success:hover { background: #156F37; }
+        .btn-danger { background: var(--rouge-marianne); color: var(--blanc); }
+        .btn-danger:hover { background: #C10000; }
+        .btn-warning { background: var(--orange-warning); color: var(--blanc); }
+        .btn-warning:hover { background: #E68A30; }
+        .btn-small { padding: 6px 12px; font-size: 11px; }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        
+        th {
+            background: var(--gris-clair);
+            padding: 12px;
+            text-align: left;
+            font-weight: 700;
+            color: var(--bleu-france);
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--bleu-france);
+        }
+        
+        td {
+            padding: 12px;
+            border-bottom: 1px solid var(--gris-clair);
+        }
+        
+        tr:hover { background: #F9F9F9; }
+        
+        .notation-table th { text-align: center; }
+        .notation-table td { text-align: center; vertical-align: middle; }
+        .notation-table .prof-name { text-align: left; font-weight: 600; }
+        
+        .notation-input {
+            width: 60px;
+            padding: 6px;
+            border: 2px solid var(--gris-clair);
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .notation-input:focus {
+            outline: none;
+            border-color: var(--bleu-france);
+        }
+        
+        .notation-total {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--bleu-france);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        .modal-content {
+            background: var(--blanc);
+            border: 2px solid var(--bleu-france);
+            padding: 32px;
+            max-width: 700px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--bleu-france);
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--bleu-france);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: var(--gris-moyen);
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+        
+        .btn-close:hover { color: var(--rouge-marianne); }
+        
+        .form-group { margin-bottom: 20px; }
+        
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: var(--gris-texte);
+            margin-bottom: 8px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid var(--gris-clair);
+            font-size: 14px;
+            font-family: inherit;
+            background: var(--blanc);
+        }
+        
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--bleu-france);
+        }
+        
+        .form-textarea { resize: vertical; min-height: 80px; }
+        
+        .alert {
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            border-left: 4px solid;
+            display: none;
+        }
+        
+        .alert.show { display: block; animation: slideIn 0.3s ease-out; }
+        .alert-error { background: #FEE; color: var(--rouge-marianne); border-color: var(--rouge-marianne); }
+        .alert-success { background: #E8F5E9; color: var(--vert-valide); border-color: var(--vert-valide); }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .badge-active { background: #E8F5E9; color: var(--vert-valide); }
+        .badge-inactive { background: #FEE; color: var(--rouge-marianne); }
+        .badge-pending { background: #FFF3CD; color: #856404; }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, var(--bleu-france) 0%, #000070 100%);
+            color: var(--blanc);
+            padding: 20px;
+            border-left: 4px solid var(--rouge-marianne);
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            opacity: 0.9;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+        }
+        
+        .checkbox-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 2px solid var(--gris-clair);
+            padding: 12px;
+        }
+        
+        .checkbox-item {
+            padding: 8px;
+            margin-bottom: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .checkbox-item:hover { background: #F9F9F9; }
+        
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 8px;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+        
+        .selected-count {
+            font-weight: 600;
+            color: var(--bleu-france);
+            margin-top: 8px;
+        }
+        
+        .actions { display: flex; gap: 8px; }
+        .empty-state { text-align: center; padding: 40px; color: var(--gris-moyen); }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="bandeau-bleu"></div>
+    
+    <div class="header-officiel">
+        <div class="header-content">
+            <div class="header-left">
+                <div class="marianne"><img src="logo-sterling.png" alt="Académie Sterling"></div>
+                <div>
+                    <div class="header-title">Académie Sterling</div>
+                    <div class="header-subtitle">Espace Chef d'Établissement</div>
+                </div>
+            </div>
+            <div class="user-info">
+                <div>
+                    <div class="user-name" id="userName"></div>
+                    <div class="user-role" id="userRole"></div>
+                </div>
+                <button class="btn btn-warning" onclick="showChangePasswordModal()" style="padding: 8px 16px; font-size: 12px; margin-right: 8px;">Changer mon MDP</button>
+                <button class="btn-logout" onclick="logout()">Déconnexion</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('professeurs')">Professeurs</button>
+            <button class="tab" onclick="switchTab('notations')">Notation Hebdomadaire</button>
+            <button class="tab" onclick="switchTab('appels')">Appels Quotidiens</button>
+            <button class="tab" onclick="switchTab('absences')">Absences</button>
+            <button class="tab" onclick="switchTab('formations')">Demandes de Formation</button>
+            <button class="tab" onclick="switchTab('inspections')" id="tabInspections">Inspections</button>
+            <button class="tab" onclick="switchTab('sanctions')">Sanctions</button>
+        </div>
+        
+        <!-- Onglet Professeurs -->
+        <div id="tab-professeurs" class="tab-content active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Professeurs</div>
+                    <div class="stat-value" id="statTotalProfs">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Moyenne Générale</div>
+                    <div class="stat-value" id="statMoyenne">-</div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 class="card-title" style="margin: 0;">Liste des Professeurs</h2>
+                    <button class="btn btn-primary" onclick="showAddProfModal()">+ Ajouter</button>
+                </div>
+                <div id="profsTable"></div>
+            </div>
+        </div>
+        
+        <!-- Onglet Notations EN MASSE -->
+        <div id="tab-notations" class="tab-content">
+            <div class="card">
+                <h2 class="card-title">Notation Hebdomadaire</h2>
+                
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
+                    <div class="form-group">
+                        <label class="form-label">Semaine</label>
+                        <input type="week" id="filterWeek" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Année</label>
+                        <input type="number" id="filterYear" class="form-input" value="2024">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">&nbsp;</label>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-primary" onclick="loadNotationsMasse()">Charger</button>
+                            <button class="btn btn-success" onclick="exporterPDFNotation()">📄 Export PDF</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="notationsMasseContainer"></div>
+            </div>
+        </div>
+        
+        <!-- Onglet Appels Quotidiens -->
+        <div id="tab-appels" class="tab-content">
+            <div class="card">
+                <h2 class="card-title">Appels Quotidiens - Suivi Hebdomadaire</h2>
+                <div style="display: grid; grid-template-columns: 200px; gap: 16px; margin-bottom: 24px;">
+                    <div class="form-group">
+                        <label class="form-label">Semaine</label>
+                        <input type="week" id="filterAppelWeek" class="form-input" onchange="loadAppelsQuotidiensCE()">
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="loadAppelsQuotidiensCE()">Charger</button>
+                <div id="appelsQuotidiensContainer" style="margin-top: 24px;"></div>
+            </div>
+        </div>
+        
+        <!-- Onglet Absences -->
+        <div id="tab-absences" class="tab-content">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 class="card-title" style="margin: 0;">Gestion des Absences</h2>
+                    <button class="btn btn-success" onclick="showAbsenceModal()">+ Déclarer une Absence</button>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 200px; gap: 16px; margin-bottom: 24px;">
+                    <div class="form-group">
+                        <label class="form-label">Année</label>
+                        <input type="number" id="filterAbsAnnee" class="form-input" value="2024">
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="loadAbsencesCE()">Charger</button>
+                
+                <div id="statsAbsences" style="margin: 24px 0;"></div>
+                <div id="absencesTable" style="margin-top: 24px;"></div>
+            </div>
+        </div>
+        
+        <!-- Onglet Formations -->
+        <div id="tab-formations" class="tab-content">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 class="card-title" style="margin: 0;">Demandes de Formation</h2>
+                    <button class="btn btn-success" onclick="showFormationModal()">+ Nouvelle Demande</button>
+                </div>
+                <div id="formationsTable"></div>
+            </div>
+        </div>
+        
+        <!-- Onglet Inspections -->
+        <div id="tab-inspections" class="tab-content">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 class="card-title" style="margin: 0;">Demandes d'Inspection</h2>
+                    <button class="btn btn-danger" onclick="showInspectionModal()">+ Nouvelle Demande</button>
+                </div>
+                <div id="inspectionsTable"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Professeur -->
+    <div id="profModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="profModalTitle">Ajouter un Professeur</h3>
+                <button class="btn-close" onclick="closeProfModal()">&times;</button>
+            </div>
+            <div id="profAlert" class="alert"></div>
+            <form id="profForm">
+                <input type="hidden" id="profId" name="id">
+                <div class="form-group">
+                    <label class="form-label">Nom *</label>
+                    <input type="text" id="profNom" name="nom" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Prénom *</label>
+                    <input type="text" id="profPrenom" name="prenom" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date de Naissance *</label>
+                    <input type="date" id="profDateNaissance" name="date_naissance" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email *</label>
+                    <input type="email" id="profEmail" name="email" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Échelon</label>
+                    <input type="text" id="profEchelon" name="echelon" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Pseudo Discord</label>
+                    <input type="text" id="profDiscord" name="pseudo_discord" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Discipline Enseignée *</label>
+                    <input type="text" id="profDiscipline" name="discipline_enseignee" class="form-input" required>
+                </div>
+                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                    <button type="button" class="btn" onclick="closeProfModal()">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal Formation avec SÉLECTION MULTIPLE -->
+    <div id="formationModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Demande de Formation</h3>
+                <button class="btn-close" onclick="closeFormationModal()">&times;</button>
+            </div>
+            <div id="formationAlert" class="alert"></div>
+            <form id="formationForm">
+                <div class="form-group">
+                    <label class="form-label">Sélectionner les Professeurs *</label>
+                    <div class="checkbox-list" id="profCheckboxList"></div>
+                    <div class="selected-count" id="selectedCount">0 professeur(s) sélectionné(s)</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Type de Formation *</label>
+                    <input type="text" id="formType" name="type_formation" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description *</label>
+                    <textarea id="formDescription" name="description" class="form-textarea" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Justification</label>
+                    <textarea id="formJustification" name="justification" class="form-textarea"></textarea>
+                </div>
+                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                    <button type="button" class="btn" onclick="closeFormationModal()">Annuler</button>
+                    <button type="submit" class="btn btn-success">Envoyer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal Inspection -->
+    <div id="inspectionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Demande d'Inspection</h3>
+                <button class="btn-close" onclick="closeInspectionModal()">&times;</button>
+            </div>
+            <div id="inspectionAlert" class="alert"></div>
+            <form id="inspectionForm">
+                <div class="form-group">
+                    <label class="form-label">Professeur *</label>
+                    <select id="inspProfesseur" name="id_professeur" class="form-select" required>
+                        <option value="">Sélectionner...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Type d'inspection *</label>
+                    <select id="inspType" name="type_inspection" class="form-select" required>
+                        <option value="">Sélectionner...</option>
+                        <option value="pedagogique">Pédagogique</option>
+                        <option value="administrative">Administrative</option>
+                        <option value="autre">Autre</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description / Motif *</label>
+                    <textarea id="inspDescription" name="description" class="form-textarea" placeholder="Décrivez la raison de cette demande d'inspection..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date Souhaitée</label>
+                    <input type="date" id="inspDate" name="date_programmee" class="form-input">
+                </div>
+                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                    <button type="button" class="btn" onclick="closeInspectionModal()">Annuler</button>
+                    <button type="submit" class="btn btn-danger">Envoyer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+        <!-- Onglet Sanctions -->
+        <div id="tab-sanctions" class="tab-content">
+            <div class="card">
+                <h2 class="card-title">Sanctions</h2>
+                <div style="display:flex; justify-content:flex-end; margin-bottom:16px;">
+                    <button class="btn btn-primary" onclick="showAddSanctionModal()">+ Nouvelle sanction</button>
+                </div>
+                <div id="sanctionsTable"></div>
+            </div>
+        </div>
+
+        <!-- Modal Nouvelle Sanction -->
+    <div id="sanctionModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="sanctionModalTitle">Nouvelle Sanction</h3>
+                <button class="btn-close" onclick="closeSanctionModal()">&times;</button>
+            </div>
+            <div id="sanctionAlert" class="alert"></div>
+            <div class="form-group">
+                <label class="form-label">Professeur *</label>
+                <select id="sanctionProfesseur" class="form-select">
+                    <option value="">Sélectionner un professeur...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Type de sanction *</label>
+                <select id="sanctionType" class="form-select">
+                    <option value="avertissement">Avertissement</option>
+                    <option value="blame">Blâme</option>
+                    <option value="mise_a_pied">Mise à pied</option>
+                    <option value="convocation">Convocation</option>
+                    <option value="autre">Autre</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Date *</label>
+                <input type="date" id="sanctionDate" class="form-input" value="">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Motif *</label>
+                <input type="text" id="sanctionMotif" class="form-input" placeholder="Motif de la sanction" spellcheck="false">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Description / Détails</label>
+                <textarea id="sanctionDescription" class="form-textarea" rows="3" placeholder="Détails supplémentaires..."></textarea>
+            </div>
+            <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:8px;">
+                <button class="btn" onclick="closeSanctionModal()" style="background:var(--gris-clair);color:var(--gris-texte);">Annuler</button>
+                <button class="btn btn-primary" onclick="saveSanction()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+        <!-- Modal Sanctions d'un professeur -->
+    <div id="sanctionsProfModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 class="modal-title">⚠ Sanctions — <span id="sanctionsProfNom"></span></h3>
+                <button class="btn-close" onclick="document.getElementById('sanctionsProfModal').classList.remove('show')">&times;</button>
+            </div>
+            <div style="display:flex; justify-content:flex-end; margin-bottom:16px;">
+                <button class="btn btn-primary" onclick="showAddSanctionForProf()">+ Nouvelle sanction</button>
+            </div>
+            <div id="sanctionsProfContent"></div>
+        </div>
+    </div>
+
+        <!-- Modal Réinitialisation MDP Professeur -->
+    <div id="resetMdpModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 class="modal-title">🔑 Réinitialiser le Mot de Passe</h3>
+                <button class="btn-close" onclick="closeResetMdpModal()">&times;</button>
+            </div>
+            <div id="resetMdpAlert" class="alert"></div>
+            <div style="margin-bottom: 20px;">
+                <div class="info-box">
+                    Professeur : <strong id="resetMdpProfNom"></strong>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Nouveau mot de passe *</label>
+                <input type="password" id="resetNewPassword" class="form-input" placeholder="8 caractères minimum">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Confirmer le mot de passe *</label>
+                <input type="password" id="resetConfirmPassword" class="form-input">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Ou générer un mot de passe aléatoire</label>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <input type="text" id="resetGeneratedPassword" class="form-input" readonly style="flex: 1; font-family: monospace; background: #F6F6F6;">
+                    <button class="btn btn-primary" onclick="genererMdpAleatoire()" style="white-space: nowrap;">Générer</button>
+                </div>
+                <small style="color: var(--gris-moyen); font-size: 12px; margin-top: 6px; display: block;">Cliquez sur Générer, puis copiez ce mot de passe avant de l'envoyer au professeur.</small>
+            </div>
+            <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 8px;">
+                <button class="btn" onclick="closeResetMdpModal()" style="background: var(--gris-clair); color: var(--gris-texte);">Annuler</button>
+                <button class="btn btn-success" onclick="appliquerResetMdp()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Changement de Mot de Passe -->
+    <div id="changePasswordModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 class="modal-title">CHANGER MON MOT DE PASSE</h3>
+                <button class="btn-close" onclick="closeChangePasswordModal()">&times;</button>
+            </div>
+            <div id="changePasswordAlert" class="alert"></div>
+            <form id="changePasswordForm">
+                <div class="form-group">
+                    <label class="form-label">Mot de passe actuel *</label>
+                    <input type="password" id="currentPassword" class="form-input" required autocomplete="current-password">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nouveau mot de passe *</label>
+                    <input type="password" id="newPassword" class="form-input" required minlength="8" autocomplete="new-password">
+                    <small style="color: var(--gris-moyen);">Minimum 8 caractères</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Confirmer le nouveau mot de passe *</label>
+                    <input type="password" id="confirmPassword" class="form-input" required minlength="8" autocomplete="new-password">
+                </div>
+                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                    <button type="button" class="btn" onclick="closeChangePasswordModal()">Annuler</button>
+                    <button type="submit" class="btn btn-success">Modifier</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal Absence -->
+    <div id="absenceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="absenceModalTitle">Déclarer une Absence</h3>
+                <button class="btn-close" onclick="closeAbsenceModal()">&times;</button>
+            </div>
+            <div id="absenceAlert" class="alert"></div>
+            <form id="absenceForm">
+                <input type="hidden" id="absenceId">
+                <div class="form-group">
+                    <label class="form-label">Professeur *</label>
+                    <select id="absenceProfesseur" class="form-select" required>
+                        <option value="">Sélectionner...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Motif *</label>
+                    <select id="absenceMotif" class="form-select" required>
+                        <option value="">Sélectionner...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date de début *</label>
+                    <input type="date" id="absenceDateDebut" class="form-input" required onchange="calculateDuree()">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date de fin *</label>
+                    <input type="date" id="absenceDateFin" class="form-input" required onchange="calculateDuree()">
+                </div>
+                <div id="absenceDuree" style="margin-bottom: 16px; color: var(--bleu-france); font-weight: 600;"></div>
+                <div class="form-group">
+                    <label class="form-label">Commentaire</label>
+                    <textarea id="absenceCommentaire" class="form-textarea"></textarea>
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="absenceJustificatif">
+                        <span>Justificatif fourni</span>
+                    </label>
+                </div>
+                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                    <button type="button" class="btn" onclick="closeAbsenceModal()">Annuler</button>
+                    <button type="submit" class="btn btn-success">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        let currentUser = null;
+        let professeurs = [];
+        let notationsData = {};
+        let motifs = [];
+        let absences = [];
+        
+        // ========== SANCTIONS ==========
+        let editSanctionId = null;
+
+        async function loadSanctions() {
+            try {
+                const response = await fetch('api/sanctions.php');
+                const data = await response.json();
+                if (data.success) displaySanctions(data.data || []);
+            } catch(e) { console.error('Erreur sanctions:', e); }
+        }
+
+        function displaySanctions(sanctions) {
+            const container = document.getElementById('sanctionsTable');
+            if (!sanctions.length) {
+                container.innerHTML = '<div class="empty-state">Aucune sanction enregistrée</div>';
+                return;
+            }
+            const badgeType = t => ({
+                'avertissement': '<span class="badge" style="background:#FFF3CD;color:#856404;">Avertissement</span>',
+                'blame':         '<span class="badge" style="background:#FEE;color:#E1000F;">Blâme</span>',
+                'mise_a_pied':   '<span class="badge" style="background:#E1000F;color:#fff;">Mise à pied</span>',
+                'convocation':   '<span class="badge" style="background:#E8EAF6;color:#000091;">Convocation</span>',
+                'autre':         '<span class="badge" style="background:#E5E5E5;color:#666;">Autre</span>'
+            }[t] || t);
+            const badgeStatut = s => ({
+                'active':   '<span class="badge badge-inactive">Active</span>',
+                'levee':    '<span class="badge badge-active">Levée</span>',
+                'archivee': '<span class="badge" style="background:#E5E5E5;color:#666;">Archivée</span>'
+            }[s] || s);
+            let html = '<table><thead><tr><th>Date</th><th>Professeur</th><th>Type</th><th>Motif</th><th>Émis par</th><th>Statut</th><th>Actions</th></tr></thead><tbody>';
+            sanctions.forEach(s => {
+                html += `<tr>
+                    <td>${new Date(s.date_sanction).toLocaleDateString('fr-FR')}</td>
+                    <td><strong>${s.prof_nom} ${s.prof_prenom}</strong></td>
+                    <td>${badgeType(s.type_sanction)}</td>
+                    <td>${s.motif}</td>
+                    <td>${s.emetteur_prenom} ${s.emetteur_nom} <small style="color:var(--gris-moyen)">(${s.emetteur_role})</small></td>
+                    <td>${badgeStatut(s.statut)}</td>
+                    <td class="actions">
+                        ${s.statut === 'active' ? `<button class="btn btn-success btn-small" onclick="leverSanction(${s.id_sanction})">Lever</button>` : ''}
+                        <button class="btn btn-warning btn-small" onclick="archiverSanction(${s.id_sanction})">Archiver</button>
+                    </td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function showAddSanctionModal() {
+            editSanctionId = null;
+            document.getElementById('sanctionModalTitle').textContent = 'Nouvelle Sanction';
+            document.getElementById('sanctionProfesseur').innerHTML = '<option value="">Sélectionner un professeur...</option>';
+            professeurs.forEach(p => {
+                document.getElementById('sanctionProfesseur').innerHTML +=
+                    `<option value="${p.id_professeur}">${p.nom} ${p.prenom} — ${p.discipline_enseignee}</option>`;
+            });
+            document.getElementById('sanctionDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('sanctionMotif').value = '';
+            document.getElementById('sanctionDescription').value = '';
+            document.getElementById('sanctionType').value = 'avertissement';
+            document.getElementById('sanctionAlert').className = 'alert';
+            document.getElementById('sanctionModal').classList.add('show');
+        }
+
+        function closeSanctionModal() {
+            document.getElementById('sanctionModal').classList.remove('show');
+        }
+
+        async function saveSanction() {
+            const id_prof   = document.getElementById('sanctionProfesseur').value;
+            const type      = document.getElementById('sanctionType').value;
+            const date      = document.getElementById('sanctionDate').value;
+            const motif     = document.getElementById('sanctionMotif').value.trim();
+            const desc      = document.getElementById('sanctionDescription').value.trim();
+
+            if (!id_prof || !motif || !date) {
+                showAlertCE('sanctionAlert', 'Professeur, date et motif sont requis', 'error');
+                return;
+            }
+            const formData = new FormData();
+            formData.append('id_professeur', id_prof);
+            formData.append('type_sanction', type);
+            formData.append('date_sanction', date);
+            formData.append('motif', motif);
+            formData.append('description', desc);
+            try {
+                const r = await fetch('api/sanctions.php', { method: 'POST', body: formData });
+                const d = await r.json();
+                if (d.success) {
+                    showAlertCE('sanctionAlert', '✓ Sanction enregistrée avec succès !', 'success');
+                    setTimeout(() => { closeSanctionModal(); loadSanctions(); }, 1500);
+                } else {
+                    showAlertCE('sanctionAlert', d.message || 'Erreur', 'error');
+                }
+            } catch(e) { showAlertCE('sanctionAlert', 'Erreur serveur', 'error'); }
+        }
+
+        async function leverSanction(id) {
+            if (!confirm('Lever cette sanction ?')) return;
+            const fd = new FormData();
+            fd.append('_method', 'PUT'); fd.append('id', id);
+            fd.append('statut', 'levee'); fd.append('date_levee', new Date().toISOString().split('T')[0]);
+            const r = await fetch('api/sanctions.php', { method: 'POST', body: fd });
+            const d = await r.json();
+            if (d.success) loadSanctions();
+        }
+
+        async function archiverSanction(id) {
+            if (!confirm('Archiver cette sanction ?')) return;
+            const fd = new FormData();
+            fd.append('_method', 'PUT'); fd.append('id', id); fd.append('statut', 'archivee');
+            const r = await fetch('api/sanctions.php', { method: 'POST', body: fd });
+            const d = await r.json();
+            if (d.success) loadSanctions();
+        }
+
+        let currentSanctionProfId = null;
+        let currentSanctionProfNom = null;
+
+        async function showSanctionsProf(idProf, nomProf) {
+            currentSanctionProfId  = idProf;
+            currentSanctionProfNom = nomProf;
+            document.getElementById('sanctionsProfNom').textContent = nomProf;
+            document.getElementById('sanctionsProfContent').innerHTML = '<div class="empty-state">Chargement...</div>';
+            document.getElementById('sanctionsProfModal').classList.add('show');
+            const sanctions = await loadSanctionsFiche(idProf);
+            displaySanctionsProf(sanctions);
+        }
+
+        function showAddSanctionForProf() {
+            document.getElementById('sanctionsProfModal').classList.remove('show');
+            showAddSanctionModal();
+            // Pré-sélectionner le prof
+            setTimeout(() => {
+                const sel = document.getElementById('sanctionProfesseur');
+                if (sel) sel.value = currentSanctionProfId;
+            }, 100);
+        }
+
+        function displaySanctionsProf(sanctions) {
+            const container = document.getElementById('sanctionsProfContent');
+            if (!sanctions.length) {
+                container.innerHTML = '<div class="empty-state">Aucune sanction pour ce professeur</div>';
+                return;
+            }
+            const badgeType = t => ({
+                'avertissement': '<span class="badge" style="background:#FFF3CD;color:#856404;">Avertissement</span>',
+                'blame':         '<span class="badge" style="background:#FEE;color:#E1000F;">Blâme</span>',
+                'mise_a_pied':   '<span class="badge" style="background:#E1000F;color:#fff;">Mise à pied</span>',
+                'convocation':   '<span class="badge" style="background:#E8EAF6;color:#000091;">Convocation</span>',
+                'autre':         '<span class="badge" style="background:#E5E5E5;color:#666;">Autre</span>'
+            }[t] || t);
+            let html = '<table><thead><tr><th>Date</th><th>Type</th><th>Motif</th><th>Description</th><th>Émis par</th><th>Statut</th></tr></thead><tbody>';
+            sanctions.forEach(s => {
+                html += `<tr>
+                    <td>${new Date(s.date_sanction).toLocaleDateString('fr-FR')}</td>
+                    <td>${badgeType(s.type_sanction)}</td>
+                    <td>${s.motif}</td>
+                    <td>${s.description || '—'}</td>
+                    <td>${s.emetteur_prenom} ${s.emetteur_nom}</td>
+                    <td>${s.statut === 'active' ? '<span class="badge badge-inactive">Active</span>' : s.statut === 'levee' ? '<span class="badge badge-active">Levée</span>' : '<span class="badge" style="background:#E5E5E5;color:#666;">Archivée</span>'}</td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        async function loadSanctionsFiche(idProf) {
+            try {
+                const r = await fetch(`api/sanctions.php?id_professeur=${idProf}`);
+                const d = await r.json();
+                return d.success ? d.data : [];
+            } catch(e) { return []; }
+        }
+
+        async function checkSession() {
+            try {
+                const response = await fetch('auth.php?action=check_session');
+                const data = await response.json();
+                
+                if (!data.logged_in) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+                
+                currentUser = data.user;
+                document.getElementById('userName').textContent = `${currentUser.prenom} ${currentUser.nom}`;
+                document.getElementById('userRole').textContent = `${currentUser.role} - ${currentUser.etablissement}`;
+                
+                if (currentUser.role === 'CEA') {
+                    document.getElementById('tabInspections').style.display = 'none';
+                }
+                
+                loadProfesseurs();
+                loadFormations();
+                if (currentUser.role === 'CE') {
+                    loadInspections();
+                }
+                loadMotifs();
+                
+                const now = new Date();
+                const week = getISOWeek(now);
+                document.getElementById('filterWeek').value = `${now.getFullYear()}-W${week.toString().padStart(2, '0')}`;
+                document.getElementById('filterYear').value = now.getFullYear();
+                document.getElementById('filterAppelWeek').value = `${now.getFullYear()}-W${week.toString().padStart(2, '0')}`;
+                document.getElementById('filterAbsAnnee').value = now.getFullYear();
+            } catch (error) {
+                console.error('Erreur session:', error);
+                window.location.href = 'index.html';
+            }
+        }
+        
+        function getISOWeek(date) {
+            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+            return Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+        }
+        
+        async function logout() {
+            const formData = new FormData();
+            formData.append('action', 'logout');
+            await fetch('auth.php', { method: 'POST', body: formData });
+            window.location.href = 'index.html';
+        }
+        
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+        }
+        
+        // ========== PROFESSEURS ==========
+        async function loadProfesseurs() {
+            try {
+                const response = await fetch('api/professeurs.php');
+                const data = await response.json();
+                if (data.success) {
+                    professeurs = data.data;
+                    displayProfesseurs(professeurs);
+                    updateStats(professeurs);
+                    updateProfesseurSelects();
+                }
+            } catch (error) {
+                console.error('Erreur chargement professeurs:', error);
+            }
+        }
+        
+        function displayProfesseurs(profs) {
+            const container = document.getElementById('profsTable');
+            if (profs.length === 0) {
+                container.innerHTML = '<div class="empty-state">Aucun professeur</div>';
+                return;
+            }
+            let html = '<table><thead><tr><th>Nom</th><th>Prénom</th><th>Discipline</th><th>Échelon</th><th>Discord</th><th>Moyenne</th><th>Statut</th><th>Actions</th></tr></thead><tbody>';
+            profs.forEach(prof => {
+                const moyenne = prof.moyenne_annuelle ? parseFloat(prof.moyenne_annuelle).toFixed(2) : '-';
+                html += `<tr>
+                    <td>${prof.nom}</td>
+                    <td>${prof.prenom}</td>
+                    <td>${prof.discipline_enseignee}</td>
+                    <td>${prof.echelon || '-'}</td>
+                    <td>${prof.pseudo_discord || '-'}</td>
+                    <td><strong>${moyenne}</strong></td>
+                    <td><span class="badge badge-${prof.statut === 'actif' ? 'active' : 'inactive'}">${prof.statut}</span></td>
+                    <td class="actions">
+                        <button class="btn btn-warning btn-small" onclick="editProfesseur(${prof.id_professeur})">Modifier</button>
+                        <button class="btn btn-primary btn-small" onclick="showSanctionsProf(${prof.id_professeur}, '${prof.nom} ${prof.prenom}')">⚠ Sanctions</button>
+                        <button class="btn btn-danger btn-small" onclick="resetMdpProf(${prof.id_professeur}, '${prof.nom} ${prof.prenom}')">🔑 MDP</button>
+                        <button class="btn btn-danger btn-small" onclick="deleteProfesseur(${prof.id_professeur}, '${prof.nom} ${prof.prenom}')">Supprimer</button>
+                    </td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+        
+        function updateStats(profs) {
+            document.getElementById('statTotalProfs').textContent = profs.length;
+            const moyennes = profs.filter(p => p.moyenne_annuelle).map(p => parseFloat(p.moyenne_annuelle));
+            if (moyennes.length > 0) {
+                const moyenne = moyennes.reduce((a, b) => a + b, 0) / moyennes.length;
+                document.getElementById('statMoyenne').textContent = moyenne.toFixed(2) + '/20';
+            } else {
+                document.getElementById('statMoyenne').textContent = '-';
+            }
+        }
+        
+        function updateProfesseurSelects() {
+            const select = document.getElementById('inspProfesseur');
+            if (select) {
+                select.innerHTML = '<option value="">Sélectionner...</option>';
+                professeurs.forEach(prof => {
+                    select.innerHTML += `<option value="${prof.id_professeur}">${prof.nom} ${prof.prenom} - ${prof.discipline_enseignee}</option>`;
+                });
+            }
+        }
+        
+        function showAddProfModal() {
+            document.getElementById('profModalTitle').textContent = 'Ajouter un Professeur';
+            document.getElementById('profForm').reset();
+            document.getElementById('profId').value = '';
+            document.getElementById('profModal').classList.add('show');
+        }
+        
+        function editProfesseur(id) {
+            const prof = professeurs.find(p => p.id_professeur == id);
+            if (!prof) return;
+            document.getElementById('profModalTitle').textContent = 'Modifier';
+            document.getElementById('profId').value = prof.id_professeur;
+            document.getElementById('profNom').value = prof.nom;
+            document.getElementById('profPrenom').value = prof.prenom;
+            document.getElementById('profDateNaissance').value = prof.date_naissance;
+            document.getElementById('profEmail').value = prof.email;
+            document.getElementById('profEchelon').value = prof.echelon || '';
+            document.getElementById('profDiscord').value = prof.pseudo_discord || '';
+            document.getElementById('profDiscipline').value = prof.discipline_enseignee;
+            document.getElementById('profModal').classList.add('show');
+        }
+        
+        async function deleteProfesseur(id, nom) {
+            if (!confirm(`Supprimer ${nom} ?`)) return;
+            const formData = new FormData();
+            formData.append('_method', 'DELETE');
+            formData.append('id', id);
+            try {
+                const response = await fetch('api/professeurs.php', { method: 'POST', body: formData });
+                const data = await response.json();
+                if (data.success) loadProfesseurs();
+            } catch (error) {
+                console.error('Erreur suppression:', error);
+            }
+        }
+
+        // ========== RÉINITIALISATION MDP PROFESSEUR ==========
+        let resetMdpProfId = null;
+
+        function resetMdpProf(idProfesseur, nomProf) {
+            resetMdpProfId = idProfesseur;
+            document.getElementById('resetMdpProfNom').textContent = nomProf;
+            document.getElementById('resetNewPassword').value = '';
+            document.getElementById('resetConfirmPassword').value = '';
+            document.getElementById('resetGeneratedPassword').value = '';
+            document.getElementById('resetMdpAlert').className = 'alert';
+            document.getElementById('resetMdpModal').classList.add('show');
+        }
+
+        function closeResetMdpModal() {
+            document.getElementById('resetMdpModal').classList.remove('show');
+            resetMdpProfId = null;
+        }
+
+        function genererMdpAleatoire() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#';
+            let mdp = '';
+            for (let i = 0; i < 10; i++) {
+                mdp += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            document.getElementById('resetGeneratedPassword').value = mdp;
+            document.getElementById('resetNewPassword').value = mdp;
+            document.getElementById('resetConfirmPassword').value = mdp;
+            // Copier dans le presse-papier
+            navigator.clipboard.writeText(mdp).then(() => {
+                showAlertCE('resetMdpAlert', '✓ Mot de passe généré et copié dans le presse-papier !', 'success');
+            }).catch(() => {
+                showAlertCE('resetMdpAlert', '✓ Mot de passe généré — copiez-le avant de valider.', 'success');
+            });
+        }
+
+        async function appliquerResetMdp() {
+            if (!resetMdpProfId) return;
+            const newPwd = document.getElementById('resetNewPassword').value;
+            const confirmPwd = document.getElementById('resetConfirmPassword').value;
+
+            if (!newPwd) {
+                showAlertCE('resetMdpAlert', 'Veuillez saisir ou générer un mot de passe', 'error');
+                return;
+            }
+            if (newPwd.length < 8) {
+                showAlertCE('resetMdpAlert', 'Le mot de passe doit contenir au moins 8 caractères', 'error');
+                return;
+            }
+            if (newPwd !== confirmPwd) {
+                showAlertCE('resetMdpAlert', 'Les mots de passe ne correspondent pas', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('action', 'reset_prof_password');
+            formData.append('id_professeur', resetMdpProfId);
+            formData.append('new_password', newPwd);
+
+            try {
+                const response = await fetch('api/utilisateurs.php', { method: 'POST', body: formData });
+                const data = await response.json();
+                if (data.success) {
+                    showAlertCE('resetMdpAlert', '✓ Mot de passe réinitialisé avec succès !', 'success');
+                    setTimeout(() => closeResetMdpModal(), 2000);
+                } else {
+                    showAlertCE('resetMdpAlert', data.message || 'Erreur lors de la réinitialisation', 'error');
+                }
+            } catch (e) {
+                showAlertCE('resetMdpAlert', 'Erreur serveur', 'error');
+            }
+        }
+
+        function showAlertCE(alertId, message, type) {
+            const el = document.getElementById(alertId);
+            el.textContent = message;
+            el.className = `alert alert-${type} show`;
+            setTimeout(() => el.className = 'alert', 6000);
+        }
+        
+        function closeProfModal() {
+            document.getElementById('profModal').classList.remove('show');
+        }
+        
+        document.getElementById('profForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const id = document.getElementById('profId').value;
+            if (id) formData.append('_method', 'PUT');
+            try {
+                const response = await fetch('api/professeurs.php', { method: 'POST', body: formData });
+                const data = await response.json();
+                if (data.success) {
+                    closeProfModal();
+                    loadProfesseurs();
+                } else {
+                    showAlert('profAlert', data.message, 'error');
+                }
+            } catch (error) {
+                showAlert('profAlert', 'Erreur serveur', 'error');
+            }
+        });
+        
+        // ========== EXPORT PDF NOTATION ==========
+        function exporterPDFNotation() {
+            const weekValue = document.getElementById('filterWeek').value;
+            const annee = document.getElementById('filterYear').value;
+            
+            if (!weekValue) {
+                alert('Veuillez sélectionner une semaine');
+                return;
+            }
+            
+            const [year, week] = weekValue.split('-W');
+            const semaine = `${year}-W${week}`;
+            
+            // Ouvrir dans un nouvel onglet
+            const url = `api/export_pdf_notation.php?semaine=${semaine}&annee=${annee}`;
+            window.open(url, '_blank');
+        }
+        
+        // ========== NOTATION EN MASSE ==========
+        async function loadNotationsMasse() {
+            const weekValue = document.getElementById('filterWeek').value;
+            if (!weekValue) {
+                alert('Veuillez sélectionner une semaine');
+                return;
+            }
+            const [year, week] = weekValue.split('-W');
+            const semaine = `${year}-W${week}`;
+            const annee = document.getElementById('filterYear').value;
+            
+            try {
+                const response = await fetch(`api/notations.php?semaine=${semaine}&annee=${annee}`);
+                const data = await response.json();
+                if (data.success) {
+                    const notations = data.data;
+                    notationsData = {};
+                    notations.forEach(n => {
+                        notationsData[n.id_professeur] = {
+                            note_appels: n.note_appels,
+                            note_cdt: n.note_cdt,
+                            commentaire: n.commentaire
+                        };
+                    });
+                    displayNotationsMasse(semaine, annee);
+                }
+            } catch (error) {
+                console.error('Erreur chargement notations:', error);
+            }
+        }
+        
+        function displayNotationsMasse(semaine, annee) {
+            const container = document.getElementById('notationsMasseContainer');
+            if (professeurs.length === 0) {
+                container.innerHTML = '<div class="empty-state">Aucun professeur</div>';
+                return;
+            }
+            
+            let html = `<div style="margin-bottom: 16px; padding: 12px; background: #E8F5E9; border-left: 4px solid ${getComputedStyle(document.documentElement).getPropertyValue('--vert-valide')};">
+                <strong>Semaine ${semaine}</strong> - Remplissez les notes pour chaque professeur
+            </div>`;
+            
+            html += '<table class="notation-table"><thead><tr>';
+            html += '<th class="prof-name">Professeur</th>';
+            html += '<th>Discipline</th>';
+            html += '<th>Appels<br>/10</th>';
+            html += '<th>CDT<br>/10</th>';
+            html += '<th>Total<br>/20</th>';
+            html += '<th>Commentaire</th>';
+            html += '</tr></thead><tbody>';
+            
+            professeurs.forEach(prof => {
+                const existing = notationsData[prof.id_professeur] || {};
+                const appels = existing.note_appels || '';
+                const cdt = existing.note_cdt || '';
+                // Calcul total : si une note est "abs", total = "abs"
+                let total = '-';
+                if (appels && cdt) {
+                    if (appels.toString().toLowerCase() === 'abs' || cdt.toString().toLowerCase() === 'abs') {
+                        total = 'abs';
+                    } else if (!isNaN(appels) && !isNaN(cdt)) {
+                        total = (parseFloat(appels) + parseFloat(cdt)).toFixed(1);
+                    }
+                }
+                
+                html += `<tr>
+                    <td class="prof-name">${prof.nom} ${prof.prenom}</td>
+                    <td>${prof.discipline_enseignee}</td>
+                    <td><input type="text" class="notation-input" id="appels_${prof.id_professeur}" 
+                        value="${appels}" placeholder="0-10 ou Abs"
+                        onchange="updateTotal(${prof.id_professeur})"
+                        spellcheck="false" autocorrect="off" autocapitalize="off"
+                        style="width: 80px; text-align: center;"></td>
+                    <td><input type="text" class="notation-input" id="cdt_${prof.id_professeur}" 
+                        value="${cdt}" placeholder="0-10 ou Abs"
+                        onchange="updateTotal(${prof.id_professeur})"
+                        spellcheck="false" autocorrect="off" autocapitalize="off"
+                        style="width: 80px; text-align: center;"></td>
+                    <td><span class="notation-total" id="total_${prof.id_professeur}" style="${total === 'abs' ? 'color: #999; font-style: italic;' : ''}">${total}</span></td>
+                    <td><input type="text" class="form-input" id="comment_${prof.id_professeur}" 
+                        value="${existing.commentaire || ''}"
+                        spellcheck="false" autocorrect="off"
+                        style="width: 100%;"></td>
+                </tr>`;
+            });
+            
+            html += '</tbody></table>';
+            html += `<div style="text-align: center; margin-top: 24px;">
+                <button class="btn btn-success" onclick="enregistrerNotationsMasse('${semaine}', ${annee})" style="padding: 14px 32px; font-size: 14px;">
+                    💾 Enregistrer toutes les notations
+                </button>
+            </div>`;
+            
+            container.innerHTML = html;
+        }
+        
+        function updateTotal(profId) {
+            const appelsVal = document.getElementById(`appels_${profId}`).value.trim();
+            const cdtVal = document.getElementById(`cdt_${profId}`).value.trim();
+            const totalSpan = document.getElementById(`total_${profId}`);
+            
+            // Si une valeur est "abs", total = "abs"
+            if (appelsVal.toLowerCase() === 'abs' || cdtVal.toLowerCase() === 'abs') {
+                totalSpan.textContent = 'abs';
+                totalSpan.style.color = '#999';
+                totalSpan.style.fontStyle = 'italic';
+                return;
+            }
+            
+            // Sinon, calculer la somme
+            const appels = parseFloat(appelsVal) || 0;
+            const cdt = parseFloat(cdtVal) || 0;
+            
+            if (appelsVal && cdtVal) {
+                totalSpan.textContent = (appels + cdt).toFixed(1);
+                totalSpan.style.color = '';
+                totalSpan.style.fontStyle = '';
+            } else {
+                totalSpan.textContent = '-';
+                totalSpan.style.color = '';
+                totalSpan.style.fontStyle = '';
+            }
+        }
+        
+        async function enregistrerNotationsMasse(semaine, annee) {
+            if (!confirm('Enregistrer toutes les notations ?')) return;
+            
+            let saved = 0;
+            let errors = 0;
+            
+            for (const prof of professeurs) {
+                const appels = document.getElementById(`appels_${prof.id_professeur}`).value;
+                const cdt = document.getElementById(`cdt_${prof.id_professeur}`).value;
+                const comment = document.getElementById(`comment_${prof.id_professeur}`).value;
+                
+                if (appels === '' || cdt === '') continue;
+                
+                const formData = new FormData();
+                formData.append('id_professeur', prof.id_professeur);
+                formData.append('semaine', semaine);
+                formData.append('annee', annee);
+                formData.append('note_appels', appels);
+                formData.append('note_cdt', cdt);
+                formData.append('commentaire', comment);
+                
+                try {
+                    const response = await fetch('api/notations.php', { method: 'POST', body: formData });
+                    const data = await response.json();
+                    if (data.success) saved++;
+                    else errors++;
+                } catch (error) {
+                    errors++;
+                }
+            }
+            
+            alert(`Notations enregistrées: ${saved}\nErreurs: ${errors}`);
+            loadProfesseurs();
+            loadNotationsMasse();
+        }
+        
+        // ========== FORMATIONS MULTIPLE ==========
+        async function loadFormations() {
+            try {
+                const response = await fetch('api/formations.php');
+                const data = await response.json();
+                if (data.success) displayFormations(data.data);
+            } catch (error) {
+                console.error('Erreur chargement formations:', error);
+            }
+        }
+        
+        function displayFormations(formations) {
+            const container = document.getElementById('formationsTable');
+            if (formations.length === 0) {
+                container.innerHTML = '<div class="empty-state">Aucune demande</div>';
+                return;
+            }
+            let html = '<table><thead><tr><th>Professeur</th><th>Type</th><th>Description</th><th>Statut</th><th>Date</th></tr></thead><tbody>';
+            formations.forEach(form => {
+                html += `<tr>
+                    <td>${form.prof_nom} ${form.prof_prenom}</td>
+                    <td>${form.type_formation}</td>
+                    <td>${form.description.substring(0, 50)}...</td>
+                    <td><span class="badge badge-${form.statut === 'en_attente' ? 'pending' : form.statut === 'approuvee' ? 'active' : 'inactive'}">${form.statut}</span></td>
+                    <td>${new Date(form.date_demande).toLocaleDateString('fr-FR')}</td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+        
+        function showFormationModal() {
+            const list = document.getElementById('profCheckboxList');
+            list.innerHTML = '';
+            professeurs.forEach(prof => {
+                list.innerHTML += `<div class="checkbox-item">
+                    <input type="checkbox" id="prof_${prof.id_professeur}" value="${prof.id_professeur}" onchange="updateSelectedCount()">
+                    <label for="prof_${prof.id_professeur}">${prof.nom} ${prof.prenom} (${prof.discipline_enseignee})</label>
+                </div>`;
+            });
+            updateSelectedCount();
+            document.getElementById('formationForm').reset();
+            document.getElementById('formationModal').classList.add('show');
+        }
+        
+        function updateSelectedCount() {
+            const checked = document.querySelectorAll('#profCheckboxList input[type="checkbox"]:checked').length;
+            document.getElementById('selectedCount').textContent = `${checked} professeur(s) sélectionné(s)`;
+        }
+        
+        function closeFormationModal() {
+            document.getElementById('formationModal').classList.remove('show');
+        }
+        
+        document.getElementById('formationForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const checkedBoxes = document.querySelectorAll('#profCheckboxList input[type="checkbox"]:checked');
+            if (checkedBoxes.length === 0) {
+                showAlert('formationAlert', 'Sélectionnez au moins un professeur', 'error');
+                return;
+            }
+            
+            const type = document.getElementById('formType').value;
+            const description = document.getElementById('formDescription').value;
+            const justification = document.getElementById('formJustification').value;
+            
+            let created = 0;
+            for (const box of checkedBoxes) {
+                const formData = new FormData();
+                formData.append('id_professeur', box.value);
+                formData.append('type_formation', type);
+                formData.append('description', description);
+                formData.append('justification', justification);
+                
+                try {
+                    const response = await fetch('api/formations.php', { method: 'POST', body: formData });
+                    const data = await response.json();
+                    if (data.success) created++;
+                } catch (error) {
+                    console.error('Erreur:', error);
+                }
+            }
+            
+            alert(`${created} demande(s) créée(s)`);
+            closeFormationModal();
+            loadFormations();
+        });
+        
+        // ========== INSPECTIONS ==========
+        async function loadInspections() {
+            try {
+                const response = await fetch('api/inspections.php');
+                const data = await response.json();
+                if (data.success) displayInspections(data.data);
+            } catch (error) {
+                console.error('Erreur chargement inspections:', error);
+            }
+        }
+        
+        function displayInspections(inspections) {
+            const container = document.getElementById('inspectionsTable');
+            if (inspections.length === 0) {
+                container.innerHTML = '<div class="empty-state">Aucune demande</div>';
+                return;
+            }
+            let html = '<table><thead><tr><th>Professeur</th><th>Motif</th><th>Date Demandée</th><th>Statut</th><th>Date Demande</th></tr></thead><tbody>';
+            inspections.forEach(insp => {
+                html += `<tr>
+                    <td>${insp.prof_nom} ${insp.prof_prenom}</td>
+                    <td>${insp.motif.substring(0, 50)}...</td>
+                    <td>${insp.date_demandee ? new Date(insp.date_demandee).toLocaleDateString('fr-FR') : '-'}</td>
+                    <td><span class="badge badge-${insp.statut === 'en_attente' ? 'pending' : insp.statut === 'planifiee' ? 'active' : 'inactive'}">${insp.statut}</span></td>
+                    <td>${new Date(insp.date_demande).toLocaleDateString('fr-FR')}</td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+        
+        function showInspectionModal() {
+            document.getElementById('inspectionForm').reset();
+            // Remplir le select des professeurs
+            const select = document.getElementById('inspProfesseur');
+            select.innerHTML = '<option value="">Sélectionner...</option>';
+            professeurs.forEach(prof => {
+                select.innerHTML += `<option value="${prof.id_professeur}">${prof.nom} ${prof.prenom} — ${prof.discipline_enseignee}</option>`;
+            });
+            document.getElementById('inspectionModal').classList.add('show');
+        }
+        
+        function closeInspectionModal() {
+            document.getElementById('inspectionModal').classList.remove('show');
+        }
+        
+        document.getElementById('inspectionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            try {
+                const response = await fetch('api/inspections.php', { method: 'POST', body: formData });
+                const data = await response.json();
+                if (data.success) {
+                    closeInspectionModal();
+                    loadInspections();
+                } else {
+                    showAlert('inspectionAlert', data.message, 'error');
+                }
+            } catch (error) {
+                showAlert('inspectionAlert', 'Erreur serveur', 'error');
+            }
+        });
+        
+        // ========== CHANGEMENT MOT DE PASSE ==========
+        function showChangePasswordModal() {
+            document.getElementById('changePasswordForm').reset();
+            document.getElementById('changePasswordModal').classList.add('show');
+        }
+        
+        function closeChangePasswordModal() {
+            document.getElementById('changePasswordModal').classList.remove('show');
+        }
+        
+        document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (newPassword !== confirmPassword) {
+                showAlert('changePasswordAlert', 'Les nouveaux mots de passe ne correspondent pas', 'error');
+                return;
+            }
+            
+            if (newPassword.length < 8) {
+                showAlert('changePasswordAlert', 'Le mot de passe doit contenir au moins 8 caractères', 'error');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('action', 'change_password');
+            formData.append('current_password', currentPassword);
+            formData.append('new_password', newPassword);
+            formData.append('confirm_password', confirmPassword);
+            
+            try {
+                const response = await fetch('auth.php', { method: 'POST', body: formData });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert('changePasswordAlert', data.message, 'success');
+                    setTimeout(() => {
+                        closeChangePasswordModal();
+                    }, 2000);
+                } else {
+                    showAlert('changePasswordAlert', data.message, 'error');
+                }
+            } catch (error) {
+                showAlert('changePasswordAlert', 'Erreur serveur', 'error');
+            }
+        });
+        
+        // ========== ABSENCES CE/CEA ==========
+        async function loadMotifs() {
+            try {
+                const response = await fetch('api/motifs_absence.php');
+                const data = await response.json();
+                if (data.success) {
+                    motifs = data.data.filter(m => m.actif == 1);
+                    updateMotifSelect();
+                }
+            } catch (error) {
+                console.error('Erreur chargement motifs:', error);
+            }
+        }
+        
+        function updateMotifSelect() {
+            const select = document.getElementById('absenceMotif');
+            if (select) {
+                select.innerHTML = '<option value="">Sélectionner...</option>';
+                motifs.forEach(motif => {
+                    select.innerHTML += `<option value="${motif.id_motif}">${motif.libelle}</option>`;
+                });
+            }
+        }
+        
+        async function loadAbsencesCE() {
+            const annee = document.getElementById('filterAbsAnnee').value;
+            
+            try {
+                const [absResponse, statsResponse] = await Promise.all([
+                    fetch(`api/absences.php?annee=${annee}`),
+                    fetch(`api/absences.php?stats=1&annee=${annee}`)
+                ]);
+                
+                const absData = await absResponse.json();
+                const statsData = await statsResponse.json();
+                
+                if (absData.success) {
+                    absences = absData.data;
+                    displayAbsencesCE(absences);
+                }
+                if (statsData.success) {
+                    displayStatsAbsences(statsData.data);
+                }
+            } catch (error) {
+                console.error('Erreur chargement absences:', error);
+            }
+        }
+        
+        function displayStatsAbsences(stats) {
+            const container = document.getElementById('statsAbsences');
+            const g = stats.globales;
+            
+            let html = `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Absences</div>
+                        <div class="stat-value">${g.total_absences || 0}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Jours</div>
+                        <div class="stat-value">${g.total_jours || 0}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Moyenne</div>
+                        <div class="stat-value">${g.moyenne_jours ? parseFloat(g.moyenne_jours).toFixed(1) : 0} j</div>
+                    </div>
+                </div>
+            `;
+            
+            if (stats.par_motif && stats.par_motif.length > 0) {
+                html += '<div style="margin-top: 16px; font-size: 14px;"><strong>Répartition par motif :</strong><br>';
+                stats.par_motif.forEach(m => {
+                    html += `<span style="color: ${m.couleur}; margin-right: 16px;">● ${m.libelle} : ${m.nb_jours} j</span>`;
+                });
+                html += '</div>';
+            }
+            
+            container.innerHTML = html;
+        }
+        
+        function displayAbsencesCE(abs) {
+            const container = document.getElementById('absencesTable');
+            if (abs.length === 0) {
+                container.innerHTML = '<div class="empty-state">Aucune absence</div>';
+                return;
+            }
+            
+            let html = '<table><thead><tr><th>Professeur</th><th>Motif</th><th>Date début</th><th>Date fin</th><th>Jours</th><th>Justif.</th><th>Actions</th></tr></thead><tbody>';
+            abs.forEach(absence => {
+                const debut = new Date(absence.date_debut).toLocaleDateString('fr-FR');
+                const fin = new Date(absence.date_fin).toLocaleDateString('fr-FR');
+                html += `<tr>
+                    <td>${absence.prof_nom} ${absence.prof_prenom}</td>
+                    <td><span style="color: ${absence.motif_couleur};">● ${absence.motif_libelle}</span></td>
+                    <td>${debut}</td>
+                    <td>${fin}</td>
+                    <td><strong>${absence.nombre_jours}j</strong></td>
+                    <td>${absence.justificatif_fourni ? '✓' : '-'}</td>
+                    <td class="actions">
+                        <button class="btn btn-warning btn-small" onclick="editAbsenceCE(${absence.id_absence})">Modifier</button>
+                        <button class="btn btn-danger btn-small" onclick="deleteAbsenceCE(${absence.id_absence})">Supprimer</button>
+                    </td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+        
+        function showAbsenceModal() {
+            document.getElementById('absenceModalTitle').textContent = 'Déclarer une Absence';
+            document.getElementById('absenceForm').reset();
+            document.getElementById('absenceId').value = '';
+            document.getElementById('absenceDuree').textContent = '';
+            updateProfesseurSelectAbsence();
+            document.getElementById('absenceModal').classList.add('show');
+        }
+        
+        function updateProfesseurSelectAbsence() {
+            const select = document.getElementById('absenceProfesseur');
+            select.innerHTML = '<option value="">Sélectionner...</option>';
+            professeurs.forEach(prof => {
+                select.innerHTML += `<option value="${prof.id_professeur}">${prof.nom} ${prof.prenom} - ${prof.discipline_enseignee}</option>`;
+            });
+        }
+        
+        function calculateDuree() {
+            const debut = document.getElementById('absenceDateDebut').value;
+            const fin = document.getElementById('absenceDateFin').value;
+            if (debut && fin) {
+                const d1 = new Date(debut);
+                const d2 = new Date(fin);
+                const diff = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
+                document.getElementById('absenceDuree').textContent = `Durée : ${diff} jour${diff > 1 ? 's' : ''}`;
+            }
+        }
+        
+        function editAbsenceCE(id) {
+            const absence = absences.find(a => a.id_absence == id);
+            if (!absence) return;
+            
+            document.getElementById('absenceModalTitle').textContent = 'Modifier l\'Absence';
+            document.getElementById('absenceId').value = absence.id_absence;
+            document.getElementById('absenceProfesseur').value = absence.id_professeur;
+            document.getElementById('absenceMotif').value = absence.id_motif;
+            document.getElementById('absenceDateDebut').value = absence.date_debut;
+            document.getElementById('absenceDateFin').value = absence.date_fin;
+            document.getElementById('absenceCommentaire').value = absence.commentaire || '';
+            document.getElementById('absenceJustificatif').checked = absence.justificatif_fourni == 1;
+            calculateDuree();
+            document.getElementById('absenceModal').classList.add('show');
+        }
+        
+        async function deleteAbsenceCE(id) {
+            if (!confirm('Supprimer cette absence ?')) return;
+            const formData = new FormData();
+            formData.append('_method', 'DELETE');
+            formData.append('id', id);
+            try {
+                const response = await fetch('api/absences.php', { method: 'POST', body: formData });
+                const data = await response.json();
+                if (data.success) loadAbsencesCE();
+                else alert(data.message);
+            } catch (error) {
+                alert('Erreur serveur');
+            }
+        }
+        
+        function closeAbsenceModal() {
+            document.getElementById('absenceModal').classList.remove('show');
+        }
+        
+        document.getElementById('absenceForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData();
+            const id = document.getElementById('absenceId').value;
+            if (id) {
+                formData.append('_method', 'PUT');
+                formData.append('id', id);
+            }
+            formData.append('id_professeur', document.getElementById('absenceProfesseur').value);
+            formData.append('id_motif', document.getElementById('absenceMotif').value);
+            formData.append('date_debut', document.getElementById('absenceDateDebut').value);
+            formData.append('date_fin', document.getElementById('absenceDateFin').value);
+            formData.append('commentaire', document.getElementById('absenceCommentaire').value);
+            formData.append('justificatif_fourni', document.getElementById('absenceJustificatif').checked ? 1 : 0);
+            
+            try {
+                const response = await fetch('api/absences.php', { method: 'POST', body: formData });
+                const data = await response.json();
+                if (data.success) {
+                    closeAbsenceModal();
+                    loadAbsencesCE();
+                } else {
+                    showAlert('absenceAlert', data.message, 'error');
+                }
+            } catch (error) {
+                showAlert('absenceAlert', 'Erreur serveur', 'error');
+            }
+        });
+        
+        function showAlert(alertId, message, type) {
+            const alert = document.getElementById(alertId);
+            alert.textContent = message;
+            alert.className = `alert alert-${type} show`;
+            setTimeout(() => alert.classList.remove('show'), 5000);
+        }
+        
+        // ========== APPELS QUOTIDIENS ==========
+        async function loadAppelsQuotidiensCE() {
+            const week = document.getElementById('filterAppelWeek').value;
+            
+            if (!week) {
+                document.getElementById('appelsQuotidiensContainer').innerHTML = '<div class="empty-state">Sélectionnez une semaine</div>';
+                return;
+            }
+            
+            const [year, weekNum] = week.split('-W');
+            const lundi = getDateOfISOWeek(weekNum, year);
+            const dimanche = new Date(lundi);
+            dimanche.setDate(lundi.getDate() + 6);
+            
+            const params = `?date_debut=${formatDate(lundi)}&date_fin=${formatDate(dimanche)}`;
+            
+            try {
+                const response = await fetch(`api/appels.php${params}`);
+                const data = await response.json();
+                if (data.success) {
+                    displayAppelsQuotidiensCE(data.data, lundi);
+                }
+            } catch (error) {
+                console.error('Erreur chargement appels:', error);
+            }
+        }
+        
+        function displayAppelsQuotidiensCE(appels, lundi) {
+            const jours = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+            
+            let html = '<div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 16px; margin-bottom: 24px;">';
+            
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(lundi);
+                date.setDate(lundi.getDate() + i);
+                const dateStr = formatDate(date);
+                const appel = appels.find(a => a.date_jour === dateStr);
+                const pourcent = appel ? parseFloat(appel.pourcentage_non_fait).toFixed(1) : '-';
+                
+                html += `
+                    <div style="padding: 16px; background: var(--blanc); border: 2px solid var(--gris-clair); text-align: center;">
+                        <div style="font-weight: 700; color: var(--bleu-france); margin-bottom: 8px;">${jours[i]}</div>
+                        <div style="font-size: 11px; color: var(--gris-moyen); margin-bottom: 12px;">${date.toLocaleDateString('fr-FR')}</div>
+                        <div style="font-size: 24px; font-weight: 700; color: var(--bleu-france); margin-bottom: 8px;">${pourcent}%</div>
+                        <button class="btn btn-primary btn-small" onclick="saisirAppelQuotidien('${dateStr}', ${appel ? appel.id_appel : 'null'}, ${appel ? parseFloat(appel.pourcentage_non_fait) : 0})">Saisir</button>
+                    </div>
+                `;
+            }
+            
+            html += '</div>';
+            
+            if (appels.length > 0) {
+                html += '<h4 style="color: var(--bleu-france); margin: 24px 0 12px;">Historique des saisies</h4>';
+                html += '<table><thead><tr><th>Date</th><th>Jour</th><th>%</th><th>Saisi par</th><th>Date saisie</th></tr></thead><tbody>';
+                appels.forEach(appel => {
+                    html += `
+                        <tr>
+                            <td>${new Date(appel.date_jour).toLocaleDateString('fr-FR')}</td>
+                            <td>${appel.jour_semaine}</td>
+                            <td><strong>${parseFloat(appel.pourcentage_non_fait).toFixed(1)}%</strong></td>
+                            <td>${appel.saisie_nom} ${appel.saisie_prenom}</td>
+                            <td>${new Date(appel.date_saisie).toLocaleDateString('fr-FR')}</td>
+                        </tr>
+                    `;
+                });
+                html += '</tbody></table>';
+            }
+            
+            document.getElementById('appelsQuotidiensContainer').innerHTML = html;
+        }
+        
+        async function saisirAppelQuotidien(date, id, currentValue) {
+            const pourcent = prompt(`Saisir le % d'appels non faits pour le ${new Date(date).toLocaleDateString('fr-FR')} :\n(Entrer un nombre entre 0 et 100)`, currentValue || '0');
+            
+            if (pourcent === null) return;
+            
+            const pourcentFloat = parseFloat(pourcent);
+            if (isNaN(pourcentFloat) || pourcentFloat < 0 || pourcentFloat > 100) {
+                alert('Pourcentage invalide');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('date_jour', date);
+            formData.append('pourcentage_non_fait', pourcentFloat);
+            
+            try {
+                const response = await fetch('api/appels.php', { method: 'POST', body: formData });
+                const data = await response.json();
+                if (data.success) {
+                    loadAppelsQuotidiensCE();
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                alert('Erreur serveur');
+            }
+        }
+        
+        function getDateOfISOWeek(w, y) {
+            const simple = new Date(y, 0, 1 + (w - 1) * 7);
+            const dow = simple.getDay();
+            const ISOweekStart = simple;
+            if (dow <= 4)
+                ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+            else
+                ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+            return ISOweekStart;
+        }
+        
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        checkSession();
+        loadSanctions();
+    </script>
+</body>
+</html>

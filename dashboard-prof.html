@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mon Espace - Académie Sterling</title>
+    <style>
+        :root {
+            --bleu-france: #000091;
+            --rouge-marianne: #E1000F;
+            --gris-texte: #3A3A3A;
+            --gris-clair: #E5E5E5;
+            --gris-moyen: #666666;
+            --blanc: #FFFFFF;
+            --vert-valide: #18753C;
+            --orange-warning: #FF9940;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background: #F6F6F6;
+            color: var(--gris-texte);
+        }
+        .bandeau-bleu { height: 4px; background: linear-gradient(90deg, var(--bleu-france) 0%, var(--rouge-marianne) 100%); }
+        .header-officiel {
+            background: var(--blanc);
+            border-bottom: 3px solid var(--rouge-marianne);
+            padding: 16px 24px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-left { display: flex; align-items: center; gap: 20px; }
+        
+        /* Style modifié pour le cercle avec image */
+        .marianne {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 2px solid var(--bleu-france);
+            background: var(--blanc);
+        }
+        .marianne img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* L'image remplit le cercle sans se déformer */
+        }
+
+        .header-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--rouge-marianne);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .header-subtitle {
+            font-size: 11px;
+            color: var(--gris-moyen);
+            margin-top: 4px;
+            text-transform: uppercase;
+        }
+        .user-info { display: flex; align-items: center; gap: 16px; }
+        .user-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gris-texte);
+            text-align: right;
+        }
+        .user-role {
+            font-size: 11px;
+            color: var(--rouge-marianne);
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+        .btn-logout {
+            padding: 8px 16px;
+            background: var(--bleu-france);
+            color: var(--blanc);
+            border: none;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-logout:hover { background: #000070; }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        .tabs {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 24px;
+            border-bottom: 3px solid var(--rouge-marianne);
+            background: var(--blanc);
+        }
+        .tab {
+            padding: 12px 24px;
+            background: var(--gris-clair);
+            border: none;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gris-moyen);
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+        }
+        .tab:hover { background: #D5D5D5; }
+        .tab.active { background: var(--blanc); color: var(--rouge-marianne); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease-out; }
+        .card {
+            background: var(--blanc);
+            border: 1px solid var(--gris-clair);
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--rouge-marianne);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--rouge-marianne);
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+        }
+        .btn-primary { background: var(--rouge-marianne); color: var(--blanc); }
+        .btn-primary:hover { background: #C10000; }
+        .btn-success { background: var(--vert-valide); color: var(--blanc); }
+        .btn-success:hover { background: #156F37; }
+        .btn-warning { background: var(--orange-warning); color: var(--blanc); }
+        .btn-warning:hover { background: #E68A30; }
+        .btn-small { padding: 6px 12px; font-size: 11px; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        th {
+            background: var(--gris-clair);
+            padding: 12px;
+            text-align: left;
+            font-weight: 700;
+            color: var(--rouge-marianne);
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--rouge-marianne);
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid var(--gris-clair);
+        }
+        tr:hover { background: #F9F9F9; }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease-out;
+        }
+        .modal-content {
+            background: var(--blanc);
+            border: 2px solid var(--rouge-marianne);
+            padding: 32px;
+            max-width: 500px;
+            width: 100%;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--rouge-marianne);
+        }
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--rouge-marianne);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: var(--gris-moyen);
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+        .btn-close:hover { color: var(--rouge-marianne); }
+        .form-group { margin-bottom: 20px; }
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: var(--gris-texte);
+            margin-bottom: 8px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .form-input, .form-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid var(--gris-clair);
+            font-size: 14px;
+            font-family: inherit;
+            background: var(--blanc);
+        }
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--rouge-marianne);
+        }
+        .alert {
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            border-left: 4px solid;
+            display: none;
+        }
+        .alert.show { display: block; animation: slideIn 0.3s ease-out; }
+        .alert-error { background: #FEE; color: var(--rouge-marianne); border-color: var(--rouge-marianne); }
+        .alert-success { background: #E8F5E9; color: var(--vert-valide); border-color: var(--vert-valide); }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-success { background: #E8F5E9; color: var(--vert-valide); }
+        .badge-warning { background: #FFF3CD; color: #856404; }
+        .badge-danger { background: #FEE; color: var(--rouge-marianne); }
+        .badge-info { background: #E8EAF6; color: var(--bleu-france); }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, var(--rouge-marianne) 0%, #C10000 100%);
+            color: var(--blanc);
+            padding: 20px;
+            border-left: 4px solid var(--bleu-france);
+        }
+        .stat-card.bleu {
+            background: linear-gradient(135deg, var(--bleu-france) 0%, #0000C0 100%);
+            border-left-color: var(--rouge-marianne);
+        }
+        .stat-card.vert {
+            background: linear-gradient(135deg, var(--vert-valide) 0%, #105528 100%);
+            border-left-color: var(--bleu-france);
+        }
+        .stat-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            opacity: 0.9;
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+        }
+        .fiche-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        .fiche-item {
+            padding: 14px 16px;
+            background: #F6F6F6;
+            border-left: 4px solid var(--rouge-marianne);
+        }
+        .fiche-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--gris-moyen);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+        .fiche-value {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--gris-texte);
+        }
+        .actions { display: flex; gap: 8px; }
+        .empty-state { text-align: center; padding: 40px; color: var(--gris-moyen); font-size: 13px; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div class="bandeau-bleu"></div>
+
+    <div class="header-officiel">
+        <div class="header-content">
+            <div class="header-left">
+                <!-- Cercle avec image modifiée -->
+                <div class="marianne">
+                    <img src="logo-sterling.png" alt="Logo Professeur" id="profImage">
+                </div>
+                <div>
+                    <div class="header-title">Académie Sterling - Espace Professeur</div>
+                    <div class="header-subtitle">Consultation de votre dossier personnel</div>
+                </div>
+            </div>
+            <div class="user-info">
+                <div>
+                    <div class="user-name" id="userName"></div>
+                    <div class="user-role">Professeur</div>
+                </div>
+                <button class="btn btn-warning" onclick="showPasswordModal()" style="padding: 8px 16px; font-size: 12px; margin-right: 8px;">Changer mon MDP</button>
+                <button class="btn-logout" onclick="logout()">Déconnexion</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('fiche')">Ma Fiche</button>
+            <button class="tab" onclick="switchTab('notations')">Mes Notations</button>
+            <button class="tab" onclick="switchTab('absences')">Mes Absences</button>
+            <button class="tab" onclick="switchTab('formations')">Mes Formations</button>
+            <button class="tab" onclick="switchTab('sanctions')">Mes Sanctions</button>
+        </div>
+
+        <!-- Onglet Ma Fiche -->
+        <div id="tab-fiche" class="tab-content active">
+            <div class="card">
+                <h2 class="card-title">Mes Informations Personnelles</h2>
+                <div class="fiche-grid" id="ficheContainer">
+                    <div class="fiche-item">
+                        <div class="fiche-label">Nom complet</div>
+                        <div class="fiche-value" id="infoNom">—</div>
+                    </div>
+                    <div class="fiche-item">
+                        <div class="fiche-label">Email professionnel</div>
+                        <div class="fiche-value" id="infoEmail">—</div>
+                    </div>
+                    <div class="fiche-item">
+                        <div class="fiche-label">Discipline enseignée</div>
+                        <div class="fiche-value" id="infoDiscipline">—</div>
+                    </div>
+                    <div class="fiche-item">
+                        <div class="fiche-label">Établissement</div>
+                        <div class="fiche-value" id="infoEtablissement">—</div>
+                    </div>
+                    <div class="fiche-item">
+                        <div class="fiche-label">Échelon</div>
+                        <div class="fiche-value" id="infoEchelon">—</div>
+                    </div>
+                    <div class="fiche-item">
+                        <div class="fiche-label">Pseudo Discord</div>
+                        <div class="fiche-value" id="infoDiscord">—</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Onglet Notations -->
+        <div id="tab-notations" class="tab-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Moyenne Générale</div>
+                    <div class="stat-value" id="statMoyenne">—</div>
+                </div>
+                <div class="stat-card vert">
+                    <div class="stat-label">Meilleure Note</div>
+                    <div class="stat-value" id="statMeilleure">—</div>
+                </div>
+                <div class="stat-card bleu">
+                    <div class="stat-label">Note la Plus Basse</div>
+                    <div class="stat-value" id="statPlusBasse">—</div>
+                </div>
+            </div>
+            <div class="card">
+                <h2 class="card-title">Mes Notations Hebdomadaires</h2>
+                <div id="notationsTable"></div>
+            </div>
+        </div>
+
+        <!-- Onglet Absences -->
+        <div id="tab-absences" class="tab-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Absences</div>
+                    <div class="stat-value" id="statTotalAbs">0</div>
+                </div>
+                <div class="stat-card bleu">
+                    <div class="stat-label">Total Jours</div>
+                    <div class="stat-value" id="statTotalJours">0</div>
+                </div>
+            </div>
+            <div class="card">
+                <h2 class="card-title">Mes Absences</h2>
+                <div id="absencesTable"></div>
+            </div>
+        </div>
+
+        <!-- Onglet Formations -->
+        <div id="tab-formations" class="tab-content">
+            <div class="card">
+                <h2 class="card-title">Mes Demandes de Formation</h2>
+                <div id="formationsTable"></div>
+            </div>
+        </div>
+
+        <!-- Onglet Sanctions (lecture seule) -->
+        <div id="tab-sanctions" class="tab-content">
+            <div class="card">
+                <h2 class="card-title">Mes Sanctions</h2>
+                <div id="mySanctionsStats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;"></div>
+                <div id="mySanctionsTable"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Changement MDP -->
+    <div id="passwordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Changer mon mot de passe</h3>
+                <button class="btn-close" onclick="closePasswordModal()">&times;</button>
+            </div>
+            <div id="passwordAlert" class="alert"></div>
+            <div class="form-group">
+                <label class="form-label">Mot de passe actuel *</label>
+                <input type="password" id="oldPassword" class="form-input">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Nouveau mot de passe *</label>
+                <input type="password" id="newPassword" class="form-input" placeholder="8 caractères minimum">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Confirmer nouveau mot de passe *</label>
+                <input type="password" id="confirmPassword" class="form-input">
+            </div>
+            <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 8px;">
+                <button class="btn" onclick="closePasswordModal()" style="background: var(--gris-clair); color: var(--gris-texte);">Annuler</button>
+                <button class="btn btn-primary" onclick="changerMotDePasse()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+
+        // ========== MES SANCTIONS (lecture seule) ==========
+        async function loadMySanctions() {
+            try {
+                const r = await fetch('api/sanctions.php');
+                const d = await r.json();
+                displayMySanctions(d.success ? d.data : []);
+            } catch(e) { console.error('Erreur sanctions:', e); }
+        }
+
+        function displayMySanctions(sanctions) {
+            // Stats
+            const total   = sanctions.length;
+            const actives = sanctions.filter(s => s.statut === 'active').length;
+            const levees  = sanctions.filter(s => s.statut === 'levee').length;
+
+            document.getElementById('mySanctionsStats').innerHTML = `
+                <div style="background:linear-gradient(135deg,#E1000F,#C10000);color:#fff;padding:18px 20px;border-left:4px solid #000091;">
+                    <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;opacity:.9;margin-bottom:6px;">Total</div>
+                    <div style="font-size:30px;font-weight:700;">${total}</div>
+                </div>
+                <div style="background:linear-gradient(135deg,#E1000F,#C10000);color:#fff;padding:18px 20px;border-left:4px solid #000091;">
+                    <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;opacity:.9;margin-bottom:6px;">Actives</div>
+                    <div style="font-size:30px;font-weight:700;">${actives}</div>
+                </div>
+                <div style="background:linear-gradient(135deg,#18753C,#105528);color:#fff;padding:18px 20px;border-left:4px solid #000091;">
+                    <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;opacity:.9;margin-bottom:6px;">Levées</div>
+                    <div style="font-size:30px;font-weight:700;">${levees}</div>
+                </div>
+            `;
+
+            const container = document.getElementById('mySanctionsTable');
+            if (!sanctions.length) {
+                container.innerHTML = '<div class="empty-state">Aucune sanction enregistrée</div>';
+                return;
+            }
+
+            const badgeType = t => ({
+                'avertissement': '<span style="display:inline-block;padding:3px 8px;font-size:11px;font-weight:700;text-transform:uppercase;background:#FFF3CD;color:#856404;">Avertissement</span>',
+                'blame':         '<span style="display:inline-block;padding:3px 8px;font-size:11px;font-weight:700;text-transform:uppercase;background:#FEE;color:#E1000F;">Blâme</span>',
+                'mise_a_pied':   '<span style="display:inline-block;padding:3px 8px;font-size:11px;font-weight:700;text-transform:uppercase;background:#E1000F;color:#fff;">Mise à pied</span>',
+                'convocation':   '<span style="display:inline-block;padding:3px 8px;font-size:11px;font-weight:700;text-transform:uppercase;background:#E8EAF6;color:#000091;">Convocation</span>',
+                'autre':         '<span style="display:inline-block;padding:3px 8px;font-size:11px;font-weight:700;text-transform:uppercase;background:#E5E5E5;color:#666;">Autre</span>'
+            }[t] || t);
+
+            let html = `<table>
+                <thead><tr>
+                    <th>Date</th><th>Type</th><th>Motif</th>
+                    <th>Description</th><th>Émis par</th><th>Statut</th>
+                </tr></thead><tbody>`;
+            sanctions.forEach(s => {
+                const statut = s.statut === 'active'
+                    ? '<span style="display:inline-block;padding:3px 8px;font-size:11px;font-weight:700;text-transform:uppercase;background:#FEE;color:#E1000F;">Active</span>'
+                    : s.statut === 'levee'
+                    ? '<span style="display:inline-block;padding:3px 8px;font-size:11px;font-weight:700;text-transform:uppercase;background:#E8F5E9;color:#18753C;">Levée</span>'
+                    : '<span style="display:inline-block;padding:3px 8px;font-size:11px;font-weight:700;text-transform:uppercase;background:#E5E5E5;color:#666;">Archivée</span>';
+                html += `<tr>
+                    <td>${new Date(s.date_sanction).toLocaleDateString('fr-FR')}</td>
+                    <td>${badgeType(s.type_sanction)}</td>
+                    <td>${s.motif}</td>
+                    <td>${s.description || '—'}</td>
+                    <td>${s.emetteur_prenom} ${s.emetteur_nom} <small style="color:#666;">(${s.emetteur_role})</small></td>
+                    <td>${statut}</td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        async function checkSession() {
+            try {
+                const response = await fetch('auth.php?action=check_session');
+                const data = await response.json();
+                if (!data.success || !data.logged_in || data.role !== 'PROFESSEUR') {
+                    window.location.href = 'index.html';
+                    return;
+                }
+                currentUser = data;
+                document.getElementById('userName').textContent = `${data.prenom} ${data.nom}`;
+                await Promise.all([
+                    loadProfesseurData(),
+                    loadNotations(),
+                    loadAbsences(),
+                    loadFormations(),
+                    loadMySanctions()
+                ]);
+            } catch (error) {
+                window.location.href = 'index.html';
+            }
+        }
+
+        async function loadProfesseurData() {
+            try {
+                const response = await fetch(`api/professeurs.php?id=${currentUser.id_professeur}`);
+                const data = await response.json();
+                if (data.success && data.data) {
+                    const prof = Array.isArray(data.data) ? data.data[0] : data.data;
+                    document.getElementById('infoNom').textContent = `${prof.nom} ${prof.prenom}`;
+                    document.getElementById('infoEmail').textContent = prof.email || '—';
+                    document.getElementById('infoDiscipline').textContent = prof.discipline_enseignee || '—';
+                    document.getElementById('infoEtablissement').textContent = prof.nom_etablissement || '—';
+                    document.getElementById('infoEchelon').textContent = prof.echelon || '—';
+                    document.getElementById('infoDiscord').textContent = prof.pseudo_discord || '—';
+                    
+                    // Si l'URL de l'image est stockée dans la base de données, on l'applique ici
+                    if (prof.photo_url) {
+                        document.getElementById('profImage').src = prof.photo_url;
+                    }
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadNotations() {
+            try {
+                const response = await fetch(`api/notations.php?id_professeur=${currentUser.id_professeur}`);
+                const data = await response.json();
+                if (data.success) displayNotations(data.data || []);
+            } catch (e) { console.error(e); }
+        }
+
+        function displayNotations(notations) {
+            const container = document.getElementById('notationsTable');
+            if (!notations.length) {
+                container.innerHTML = '<div class="empty-state">Aucune notation enregistrée</div>';
+                return;
+            }
+            const valides = notations.filter(n => String(n.note_totale).toLowerCase() !== 'abs' && !isNaN(n.note_totale));
+            if (valides.length) {
+                const totaux = valides.map(n => parseFloat(n.note_totale));
+                const moy = (totaux.reduce((a, b) => a + b, 0) / totaux.length).toFixed(1);
+                document.getElementById('statMoyenne').textContent = moy + '/20';
+                document.getElementById('statMeilleure').textContent = Math.max(...totaux).toFixed(1) + '/20';
+                document.getElementById('statPlusBasse').textContent = Math.min(...totaux).toFixed(1) + '/20';
+            }
+            const sorted = [...notations].sort((a, b) => b.semaine.localeCompare(a.semaine));
+            let html = '<table><thead><tr><th>Semaine</th><th>Appels /10</th><th>CDT /10</th><th>Total /20</th><th>Commentaire</th></tr></thead><tbody>';
+            sorted.forEach(n => {
+                const fmtNote = v => String(v).toLowerCase() === 'abs'
+                    ? '<span style="color:#999;font-style:italic;">Abs</span>'
+                    : v;
+                html += `<tr>
+                    <td><strong>${n.semaine}</strong></td>
+                    <td>${fmtNote(n.note_appels)}</td>
+                    <td>${fmtNote(n.note_cdt)}</td>
+                    <td>${fmtNote(n.note_totale)}</td>
+                    <td>${n.commentaire || '—'}</td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        async function loadAbsences() {
+            try {
+                const response = await fetch(`api/absences.php?id_professeur=${currentUser.id_professeur}`);
+                const data = await response.json();
+                if (data.success) displayAbsences(data.data || []);
+            } catch (e) { console.error(e); }
+        }
+
+        function displayAbsences(absences) {
+            const container = document.getElementById('absencesTable');
+            if (!absences.length) {
+                container.innerHTML = '<div class="empty-state">Aucune absence enregistrée</div>';
+                return;
+            }
+            const totalJours = absences.reduce((s, a) => s + parseInt(a.nombre_jours || 0), 0);
+            document.getElementById('statTotalAbs').textContent = absences.length;
+            document.getElementById('statTotalJours').textContent = totalJours;
+            const sorted = [...absences].sort((a, b) => new Date(b.date_debut) - new Date(a.date_debut));
+            let html = '<table><thead><tr><th>Date début</th><th>Date fin</th><th>Motif</th><th>Jours</th><th>Justificatif</th><th>Commentaire</th></tr></thead><tbody>';
+            sorted.forEach(a => {
+                const debut = new Date(a.date_debut).toLocaleDateString('fr-FR');
+                const fin = new Date(a.date_fin).toLocaleDateString('fr-FR');
+                html += `<tr>
+                    <td>${debut}</td>
+                    <td>${fin}</td>
+                    <td><span style="color:${a.motif_couleur || '#666'};font-weight:700;">●</span> ${a.motif_libelle || '—'}</td>
+                    <td><strong>${a.nombre_jours}</strong></td>
+                    <td style="text-align:center;">${a.justificatif_fourni == 1 ? '<span class="badge badge-success">✓ Fourni</span>' : '<span class="badge badge-danger">✗ Absent</span>'}</td>
+                    <td>${a.commentaire || '—'}</td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        async function loadFormations() {
+            try {
+                const response = await fetch(`api/formations.php?id_professeur=${currentUser.id_professeur}`);
+                const data = await response.json();
+                if (data.success) displayFormations(data.data || []);
+            } catch (e) { console.error(e); }
+        }
+
+        function displayFormations(formations) {
+            const container = document.getElementById('formationsTable');
+            if (!formations.length) {
+                container.innerHTML = '<div class="empty-state">Aucune demande de formation</div>';
+                return;
+            }
+            const sorted = [...formations].sort((a, b) => new Date(b.date_demande) - new Date(a.date_demande));
+            const badgeStatut = s => ({
+                'en_attente': '<span class="badge badge-warning">En attente</span>',
+                'approuvee':  '<span class="badge badge-success">Approuvée</span>',
+                'refusee':    '<span class="badge badge-danger">Refusée</span>',
+                'completee':  '<span class="badge badge-info">Complétée</span>'
+            }[s] || s);
+            let html = '<table><thead><tr><th>Type de formation</th><th>Description</th><th>Date demande</th><th>Statut</th><th>Réponse DRH</th></tr></thead><tbody>';
+            sorted.forEach(f => {
+                html += `<tr>
+                    <td><strong>${f.type_formation}</strong></td>
+                    <td>${f.description || '—'}</td>
+                    <td>${new Date(f.date_demande).toLocaleDateString('fr-FR')}</td>
+                    <td>${badgeStatut(f.statut)}</td>
+                    <td>${f.commentaire_drh || '—'}</td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+        }
+
+        function showPasswordModal() {
+            document.getElementById('oldPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            document.getElementById('passwordAlert').className = 'alert';
+            document.getElementById('passwordModal').classList.add('show');
+        }
+
+        function closePasswordModal() {
+            document.getElementById('passwordModal').classList.remove('show');
+        }
+
+        async function changerMotDePasse() {
+            const old_password = document.getElementById('oldPassword').value;
+            const new_password = document.getElementById('newPassword').value;
+            const confirm_password = document.getElementById('confirmPassword').value;
+
+            if (!old_password || !new_password || !confirm_password) {
+                showAlert('passwordAlert', 'Tous les champs sont requis', 'error');
+                return;
+            }
+            if (new_password.length < 8) {
+                showAlert('passwordAlert', 'Le nouveau mot de passe doit contenir au moins 8 caractères', 'error');
+                return;
+            }
+            if (new_password !== confirm_password) {
+                showAlert('passwordAlert', 'Les mots de passe ne correspondent pas', 'error');
+                return;
+            }
+            const formData = new FormData();
+            formData.append('action', 'change_password');
+            formData.append('current_password', old_password);
+            formData.append('new_password', new_password);
+            formData.append('confirm_password', confirm_password);
+            try {
+                const response = await fetch('auth.php', { method: 'POST', body: formData });
+                const data = await response.json();
+                if (data.success) {
+                    showAlert('passwordAlert', 'Mot de passe modifié avec succès !', 'success');
+                    setTimeout(() => closePasswordModal(), 2000);
+                } else {
+                    showAlert('passwordAlert', data.message || 'Erreur', 'error');
+                }
+            } catch (e) {
+                showAlert('passwordAlert', 'Erreur serveur', 'error');
+            }
+        }
+
+        function showAlert(id, msg, type) {
+            const el = document.getElementById(id);
+            el.textContent = msg;
+            el.className = `alert alert-${type} show`;
+            setTimeout(() => el.className = 'alert', 5000);
+        }
+
+        async function logout() {
+            try { await fetch('auth.php?action=logout'); } catch (e) {}
+            window.location.href = 'index.html';
+        }
+
+        checkSession();
+    </script>
+</body>
+</html>
