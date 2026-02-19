@@ -16,7 +16,7 @@ if (!is_logged_in()) {
 // Professeurs : lecture seule de leurs propres sanctions
 $is_prof = has_role('PROFESSEUR');
 
-if (!has_role(['CE', 'CEA', 'DRH']) && !$is_prof) {
+if (!has_role(['CE', 'CEA', 'DRH', 'IA_DASEN', 'IA']) && !$is_prof) {
     json_response(['success' => false, 'message' => 'Accès non autorisé'], 403);
 }
 

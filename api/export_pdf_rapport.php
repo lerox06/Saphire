@@ -1,6 +1,6 @@
 <?php
 /**
- * API Export PDF Rapport d'Inspection Optimisé
+ * API Export PDF Rapport d'Inspection
  * Académie Sterling - Système RH
  */
 
@@ -20,6 +20,7 @@ if (!$id_inspection) {
 }
 
 try {
+    // Récupérer l'inspection
     $stmt = $pdo->prepare("
         SELECT i.*,
                p.nom AS prof_nom,
@@ -41,6 +42,7 @@ try {
         die('Inspection non trouvée');
     }
 
+    // IA : vérifier établissement
     if (has_role('IA') && $insp['id_etablissement'] != $_SESSION['id_etablissement']) {
         die('Accès non autorisé');
     }
@@ -56,86 +58,85 @@ try {
     ];
     $type = $type_labels[$insp['type_inspection']] ?? $insp['type_inspection'];
 
+    // Générer le HTML
     $html = '
     <!DOCTYPE html>
     <html>
     <head>
         <meta charset="UTF-8">
         <style>
-            @page { size: A4; margin: 15mm; }
-            body { font-family: Arial, sans-serif; font-size: 10.5pt; color: #333; line-height: 1.5; margin: 0; }
-            
-            /* Empêche la coupure des sections entre deux pages */
-            .section { 
-                page-break-inside: avoid; 
-                margin-bottom: 15px; 
-                padding: 12px; 
-                background: #F9F9F9; 
-                border-left: 4px solid #000091; 
-            }
-
+            @page { size: A4; margin: 20mm; }
+            body { font-family: Arial, sans-serif; font-size: 11pt; color: #333; line-height: 1.6; }
             .header {
                 border-bottom: 3px solid #E1000F;
-                padding-bottom: 10px;
-                margin-bottom: 20px;
+                padding-bottom: 15px;
+                margin-bottom: 30px;
+            }
+            .logo {
+                text-align: center;
+                margin-bottom: 15px;
             }
             .logo-text {
-                text-align: center;
-                font-size: 18pt;
+                font-size: 20pt;
                 font-weight: bold;
                 color: #000091;
                 text-transform: uppercase;
+                letter-spacing: 1px;
             }
             .subtitle {
                 text-align: center;
-                font-size: 9pt;
+                font-size: 10pt;
                 color: #666;
                 text-transform: uppercase;
             }
             h1 {
                 color: #E1000F;
-                font-size: 14pt;
+                font-size: 16pt;
                 text-align: center;
-                margin: 15px 0;
+                margin: 30px 0 20px;
                 text-transform: uppercase;
                 border-bottom: 2px solid #000091;
-                padding-bottom: 5px;
+                padding-bottom: 10px;
+            }
+            .section {
+                margin-bottom: 25px;
+                padding: 15px;
+                background: #F9F9F9;
+                border-left: 4px solid #000091;
+                page-break-inside: avoid;
+                break-inside: avoid;
             }
             .section-title {
-                font-size: 11pt;
+                font-size: 12pt;
                 font-weight: bold;
                 color: #000091;
-                margin-bottom: 8px;
+                margin-bottom: 12px;
                 text-transform: uppercase;
             }
             .info-grid {
-                display: table;
-                width: 100%;
+                display: grid;
+                grid-template-columns: 150px 1fr;
+                gap: 8px;
+                margin-bottom: 10px;
             }
-            .info-row { display: table-row; }
             .info-label {
-                display: table-cell;
                 font-weight: bold;
                 color: #666;
-                width: 140px;
-                padding-bottom: 4px;
             }
-            .info-value { display: table-cell; padding-bottom: 4px; }
-            
             .rapport-content {
                 background: white;
-                padding: 15px;
+                padding: 20px;
                 border: 1px solid #DDD;
                 white-space: pre-wrap;
-                font-size: 10pt;
-                line-height: 1.6;
+                line-height: 1.8;
+                page-break-inside: avoid;
+                break-inside: avoid;
             }
             .footer {
-                position: running(footer);
-                margin-top: 20px;
-                padding-top: 10px;
-                border-top: 1px solid #E5E5E5;
-                font-size: 8pt;
+                margin-top: 40px;
+                padding-top: 15px;
+                border-top: 2px solid #E5E5E5;
+                font-size: 9pt;
                 color: #999;
                 text-align: center;
             }
@@ -143,8 +144,10 @@ try {
     </head>
     <body>
         <div class="header">
-            <div class="logo-text">Académie Sterling</div>
-            <div class="subtitle">Rapport d\'Inspection</div>
+            <div class="logo">
+                <div class="logo-text">Académie Sterling</div>
+                <div class="subtitle">Rapport d\'Inspection</div>
+            </div>
         </div>
 
         <h1>Rapport d\'Inspection ' . htmlspecialchars($type) . '</h1>
@@ -152,46 +155,37 @@ try {
         <div class="section">
             <div class="section-title">Informations de l\'Enseignant</div>
             <div class="info-grid">
-                <div class="info-row">
-                    <div class="info-label">Nom :</div>
-                    <div class="info-value">' . htmlspecialchars($insp['prof_nom']) . ' ' . htmlspecialchars($insp['prof_prenom']) . '</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Discipline :</div>
-                    <div class="info-value">' . htmlspecialchars($insp['discipline_enseignee']) . '</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Établissement :</div>
-                    <div class="info-value">' . htmlspecialchars($insp['nom_etablissement']) . '</div>
-                </div>
+                <div class="info-label">Nom :</div>
+                <div>' . htmlspecialchars($insp['prof_nom']) . ' ' . htmlspecialchars($insp['prof_prenom']) . '</div>
+                
+                <div class="info-label">Discipline :</div>
+                <div>' . htmlspecialchars($insp['discipline_enseignee']) . '</div>
+                
+                <div class="info-label">Établissement :</div>
+                <div>' . htmlspecialchars($insp['nom_etablissement']) . '</div>
             </div>
         </div>
 
         <div class="section">
             <div class="section-title">Détails de l\'Inspection</div>
             <div class="info-grid">
-                <div class="info-row">
-                    <div class="info-label">Type :</div>
-                    <div class="info-value">' . htmlspecialchars($type) . '</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Date demande :</div>
-                    <div class="info-value">' . date('d/m/Y', strtotime($insp['date_demande'])) . '</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Date inspection :</div>
-                    <div class="info-value">' . ($insp['date_programmee'] ? date('d/m/Y', strtotime($insp['date_programmee'])) : 'Non programmée') . '</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Demandé par :</div>
-                    <div class="info-value">' . htmlspecialchars($insp['demandeur_prenom']) . ' ' . htmlspecialchars($insp['demandeur_nom']) . '</div>
-                </div>
+                <div class="info-label">Type :</div>
+                <div>' . htmlspecialchars($type) . '</div>
+                
+                <div class="info-label">Date demande :</div>
+                <div>' . date('d/m/Y', strtotime($insp['date_demande'])) . '</div>
+                
+                <div class="info-label">Date inspection :</div>
+                <div>' . ($insp['date_programmee'] ? date('d/m/Y', strtotime($insp['date_programmee'])) : 'Non programmée') . '</div>
+                
+                <div class="info-label">Demandé par :</div>
+                <div>' . htmlspecialchars($insp['demandeur_prenom']) . ' ' . htmlspecialchars($insp['demandeur_nom']) . '</div>
             </div>
         </div>
 
         <div class="section">
             <div class="section-title">Description de la Demande</div>
-            <div style="padding: 8px; background: white; border: 1px solid #DDD; font-size: 10pt;">
+            <div style="padding: 10px; background: white; border: 1px solid #DDD;">
                 ' . nl2br(htmlspecialchars($insp['description'] ?? 'Aucune description')) . '
             </div>
         </div>
@@ -207,6 +201,7 @@ try {
     </body>
     </html>';
 
+    // Retourner le HTML pour impression navigateur
     header('Content-Type: text/html; charset=UTF-8');
     echo $html;
 

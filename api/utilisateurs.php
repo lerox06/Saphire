@@ -74,9 +74,10 @@ if ($method === 'POST' && isset($_POST['action']) && $_POST['action'] === 'reset
     }
 }
 
-// Toutes les autres routes : DRH uniquement
-if (!has_role('DRH')) {
-    json_response(['success' => false, 'message' => 'Accès réservé au DRH'], 403);
+// GET : lecture accessible à tous les rôles connectés (pour agenda participants)
+// Autres routes : DRH uniquement
+if ($method !== 'GET' && !has_role('DRH')) {
+    json_response(['success' => false, 'message' => 'Modifications réservées au DRH'], 403);
 }
 
 // GET - Récupérer les utilisateurs
