@@ -370,6 +370,7 @@
             <button class="tab" onclick="switchTab('sanctions')">Sanctions</button>
             <button class="tab" onclick="switchTab('appels')">Appels Quotidiens</button>
             <button class="tab" onclick="switchTab('absences')">Absences</button>
+            <button class="tab" onclick="switchTab('agenda')"> Agenda</button>
         </div>
         
         
@@ -547,6 +548,20 @@
                 </div>
             </div>
         </div>
+
+        <!-- Onglet Agenda -->
+        <div id="tab-agenda" class="tab-content">
+            <div class="card">
+                <h2 class="card-title"> Mon Agenda</h2>
+                <div style="display:flex; justify-content:flex-end; margin-bottom:16px;">
+                    <button class="btn btn-primary" onclick="showAddEventModalDRH()">+ Nouvel Événement</button>
+                </div>
+                <div id="agendaContainerDRH"></div>
+            </div>
+        </div>
+    </div>
+
+    </div>
     </div>
     
     <!-- Modal Utilisateur -->
@@ -1297,6 +1312,198 @@
             } catch(e) { console.error(e); }
         }
 
+
+        // ========== AGENDA DRH ==========
+        let currentEventIdDRH = null;
+        let allUsersDRH = [];
+
+        async function loadAgendaDRH() {
+            try {
+                const r = await fetch('api/agenda.php');
+                const d = await r.json();
+                displayAgendaDRH(d.success ? d.data : []);
+            } catch(e) { console.error('Erreur agenda:', e); }
+        }
+
+        function displayAgendaDRH(events) {
+            const container = document.getElementById('agendaContainerDRH');
+            if (!events.length) {
+                container.innerHTML = '<div class="empty-state">Aucun événement dans votre agenda</div>';
+                return;
+            }
+
+            const now = new Date();
+            const upcoming = events.filter(e => new Date(e.date_debut) >= now);
+            const past = events.filter(e => new Date(e.date_debut) < now);
+
+            let html = '';
+            
+            if (upcoming.length) {
+                html += '<h4 style="color:var(--bleu-france);margin:20px 0 12px;">À venir</h4>';
+                html += '<div style="display:grid;gap:12px;">';
+                upcoming.forEach(e => html += renderEventCardDRH(e, false));
+                html += '</div>';
+            }
+            
+            if (past.length) {
+                html += '<h4 style="color:var(--gris-moyen);margin:24px 0 12px;">Passés</h4>';
+                html += '<div style="display:grid;gap:12px;opacity:0.7;">';
+                past.forEach(e => html += renderEventCardDRH(e, true));
+                html += '</div>';
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function renderEventCardDRH(e, past) {
+            const debut = new Date(e.date_debut);
+            const fin = new Date(e.date_fin);
+            const isCreator = e.id_createur == currentUser.id;
+            const badge = isCreator 
+                ? '<span style="background:#000091;color:#fff;padding:2px 6px;font-size:10px;font-weight:700;border-radius:3px;">CRÉATEUR</span>'
+                : '<span style="background:#18753C;color:#fff;padding:2px 6px;font-size:10px;font-weight:700;border-radius:3px;">PARTICIPANT</span>';
+            
+            return `
+                <div style="background:#fff;border:1px solid #E5E5E5;padding:16px;${past ? 'opacity:0.6;' : ''}">
+                    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;">
+                        <div>
+                            <strong style="font-size:15px;color:var(--bleu-france);">${e.titre}</strong>
+                            ${badge}
+                        </div>
+                        ${isCreator && !past ? `<div style="display:flex;gap:6px;">
+                            <button class="btn btn-warning btn-small" onclick="showEditEventModalDRH(${e.id_evenement})" style="font-size:11px;padding:4px 8px;">✏️</button>
+                            <button class="btn btn-danger btn-small" onclick="deleteEventDRH(${e.id_evenement})" style="font-size:11px;padding:4px 8px;">🗑️</button>
+                        </div>` : ''}
+                    </div>
+                    <div style="font-size:12px;color:#666;margin-bottom:8px;">
+                        📅 ${debut.toLocaleDateString('fr-FR')} ${debut.toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'})}
+                        → ${fin.toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'})}
+                        ${e.lieu ? `<br>📍 ${e.lieu}` : ''}
+                    </div>
+                    ${e.description ? `<div style="font-size:13px;margin-bottom:8px;">${e.description}</div>` : ''}
+                    <div style="font-size:11px;color:#999;">
+                        👥 ${e.nb_participants} participant(s) • Créé par ${e.createur_prenom} ${e.createur_nom}
+                    </div>
+                </div>
+            `;
+        }
+
+        async function loadAllUsersDRH() {
+            try {
+                const r = await fetch('api/utilisateurs.php');
+                const d = await r.json();
+                allUsersDRH = d.success ? d.data.filter(u => u.actif) : [];
+            } catch(e) { console.error('Erreur users:', e); }
+        }
+
+        function showAddEventModalDRH() {
+            currentEventIdDRH = null;
+            document.getElementById('eventModalTitleDRH').textContent = 'Nouvel Événement';
+            document.getElementById('eventIdDRH').value = '';
+            document.getElementById('eventTitreDRH').value = '';
+            document.getElementById('eventDescriptionDRH').value = '';
+            document.getElementById('eventDebutDRH').value = '';
+            document.getElementById('eventFinDRH').value = '';
+            document.getElementById('eventLieuDRH').value = '';
+            
+            const sel = document.getElementById('eventParticipantsDRH');
+            sel.innerHTML = '';
+            allUsersDRH.forEach(u => {
+                if (u.id_utilisateur != currentUser.id) {
+                    sel.innerHTML += `<option value="${u.id_utilisateur}">${u.prenom} ${u.nom} (${u.role})</option>`;
+                }
+            });
+            
+            document.getElementById('eventAlertDRH').className = 'alert';
+            document.getElementById('eventModalDRH').classList.add('show');
+        }
+
+        async function showEditEventModalDRH(id) {
+            try {
+                const r = await fetch('api/agenda.php');
+                const d = await r.json();
+                const event = d.data.find(e => e.id_evenement == id);
+                if (!event) return;
+                
+                currentEventIdDRH = id;
+                document.getElementById('eventModalTitleDRH').textContent = 'Modifier l\'Événement';
+                document.getElementById('eventIdDRH').value = id;
+                document.getElementById('eventTitreDRH').value = event.titre;
+                document.getElementById('eventDescriptionDRH').value = event.description || '';
+                document.getElementById('eventDebutDRH').value = event.date_debut.replace(' ', 'T').substring(0,16);
+                document.getElementById('eventFinDRH').value = event.date_fin.replace(' ', 'T').substring(0,16);
+                document.getElementById('eventLieuDRH').value = event.lieu || '';
+                
+                const sel = document.getElementById('eventParticipantsDRH');
+                sel.innerHTML = '';
+                const partIds = event.participants.map(p => p.id_utilisateur);
+                allUsersDRH.forEach(u => {
+                    if (u.id_utilisateur != currentUser.id) {
+                        const selected = partIds.includes(u.id_utilisateur) ? ' selected' : '';
+                        sel.innerHTML += `<option value="${u.id_utilisateur}"${selected}>${u.prenom} ${u.nom} (${u.role})</option>`;
+                    }
+                });
+                
+                document.getElementById('eventAlertDRH').className = 'alert';
+                document.getElementById('eventModalDRH').classList.add('show');
+            } catch(e) { console.error(e); }
+        }
+
+        function closeEventModalDRH() {
+            document.getElementById('eventModalDRH').classList.remove('show');
+        }
+
+        async function saveEventDRH() {
+            const titre = document.getElementById('eventTitreDRH').value.trim();
+            const desc  = document.getElementById('eventDescriptionDRH').value.trim();
+            const debut = document.getElementById('eventDebutDRH').value;
+            const fin   = document.getElementById('eventFinDRH').value;
+            const lieu  = document.getElementById('eventLieuDRH').value.trim();
+            
+            if (!titre || !debut || !fin) {
+                showAlertDRH('eventAlertDRH', 'Titre, date début et fin requis', 'error');
+                return;
+            }
+            
+            const sel = document.getElementById('eventParticipantsDRH');
+            const participants = Array.from(sel.selectedOptions).map(o => o.value);
+            
+            const fd = new FormData();
+            if (currentEventIdDRH) {
+                fd.append('_method', 'PUT');
+                fd.append('id', currentEventIdDRH);
+            }
+            fd.append('titre', titre);
+            fd.append('description', desc);
+            fd.append('date_debut', debut.replace('T', ' ') + ':00');
+            fd.append('date_fin', fin.replace('T', ' ') + ':00');
+            fd.append('lieu', lieu);
+            fd.append('participants', JSON.stringify(participants));
+            
+            try {
+                const r = await fetch('api/agenda.php', { method: 'POST', body: fd });
+                const d = await r.json();
+                if (d.success) {
+                    showAlertDRH('eventAlertDRH', '✓ Enregistré !', 'success');
+                    setTimeout(() => { closeEventModalDRH(); loadAgendaDRH(); }, 1500);
+                } else {
+                    showAlertDRH('eventAlertDRH', d.message || 'Erreur', 'error');
+                }
+            } catch(e) { showAlertDRH('eventAlertDRH', 'Erreur serveur', 'error'); }
+        }
+
+        async function deleteEventDRH(id) {
+            if (!confirm('Supprimer cet événement ?')) return;
+            const fd = new FormData();
+            fd.append('_method', 'DELETE');
+            fd.append('id', id);
+            try {
+                const r = await fetch('api/agenda.php', { method: 'POST', body: fd });
+                const d = await r.json();
+                if (d.success) loadAgendaDRH();
+            } catch(e) { console.error(e); }
+        }
+
         function exportRapportPDF(idInspection) {
             window.open(`api/export_pdf_rapport.php?id=${idInspection}`, '_blank');
         }
@@ -1969,47 +2176,8 @@
             container.innerHTML = html;
         }
         
-        // async function traiterInspection(id) // DEPRECATED {
-            try {
-                const response = await fetch('api/inspections.php');
-                const data = await response.json();
-                if (data.success) {
-                    const inspection = data.data.find(i => i.id_inspection == id);
-                    if (inspection) {
-                        document.getElementById('inspId').value = id;
-                        document.getElementById('inspDetails').innerHTML = `
-                            <strong>Professeur:</strong> ${inspection.prof_nom} ${inspection.prof_prenom}<br>
-                            <strong>Motif:</strong> ${inspection.motif}
-                        `;
-                        document.getElementById('traiterInspModal').classList.add('show');
-                    }
-                }
-            } catch (error) {
-                console.error('Erreur:', error);
-            }
-        }
-        
-        function closeTraiterInspModal() {
-            document.getElementById('traiterInspModal').classList.remove('show');
-        }
-        
-        document.getElementById('traiterInspForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            formData.append('_method', 'PUT');
-            try {
-                const response = await fetch('api/inspections.php', { method: 'POST', body: formData });
-                const data = await response.json();
-                if (data.success) {
-                    closeTraiterInspModal();
-                    loadInspections();
-                } else {
-                    showAlert('traiterInspAlert', data.message, 'error');
-                }
-            } catch (error) {
-                showAlert('traiterInspAlert', 'Erreur serveur', 'error');
-            }
-        });
+        // traiterInspection() — fonction supprimée, obsolète
+
         
         // ========== APPELS QUOTIDIENS ==========
         async function loadAppelsQuotidiens() {
@@ -2528,6 +2696,54 @@
         checkSession();
         loadSanctionsDRH();
         loadInspections();
+        loadAllUsersDRH();
+        loadAgendaDRH();
     </script>
+
+    <!-- Modal Événement Agenda -->
+    <div id="eventModalDRH" class="modal">
+        <div class="modal-content" style="max-width:700px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="eventModalTitleDRH">Nouvel Événement</h3>
+                <button class="btn-close" onclick="closeEventModalDRH()">&times;</button>
+            </div>
+            <div style="padding:24px;">
+                <div id="eventAlertDRH" class="alert"></div>
+                <input type="hidden" id="eventIdDRH">
+                <div class="form-group">
+                    <label class="form-label">Titre *</label>
+                    <input type="text" id="eventTitreDRH" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea id="eventDescriptionDRH" class="form-textarea" rows="3"></textarea>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div class="form-group">
+                        <label class="form-label">Date/Heure début *</label>
+                        <input type="datetime-local" id="eventDebutDRH" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Date/Heure fin *</label>
+                        <input type="datetime-local" id="eventFinDRH" class="form-input">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Lieu</label>
+                    <input type="text" id="eventLieuDRH" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Participants</label>
+                    <select id="eventParticipantsDRH" class="form-select" multiple size="5" style="height:120px;"></select>
+                    <small style="color:#666;font-size:11px;">Maintenez Ctrl/Cmd pour sélectionner plusieurs</small>
+                </div>
+                <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:16px;">
+                    <button class="btn" onclick="closeEventModalDRH()" style="background:var(--gris-clair);color:var(--gris-moyen);">Annuler</button>
+                    <button class="btn btn-primary" onclick="saveEventDRH()">Enregistrer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>

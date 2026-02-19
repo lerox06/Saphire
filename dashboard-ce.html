@@ -444,6 +444,7 @@
             <button class="tab" onclick="switchTab('formations')">Demandes de Formation</button>
             <button class="tab" onclick="switchTab('inspections')" id="tabInspections">Inspections</button>
             <button class="tab" onclick="switchTab('sanctions')">Sanctions</button>
+            <button class="tab" onclick="switchTab('agenda')"> Agenda</button>
         </div>
         
         <!-- Onglet Professeurs -->
@@ -486,7 +487,7 @@
                         <label class="form-label">&nbsp;</label>
                         <div style="display: flex; gap: 8px;">
                             <button class="btn btn-primary" onclick="loadNotationsMasse()">Charger</button>
-                            <button class="btn btn-success" onclick="exporterPDFNotation()">📄 Export PDF</button>
+                            <button class="btn btn-success" onclick="exporterPDFNotation()"> Export PDF</button>
                         </div>
                     </div>
                 </div>
@@ -550,6 +551,17 @@
                     <button class="btn btn-danger" onclick="showInspectionModal()">+ Nouvelle Demande</button>
                 </div>
                 <div id="inspectionsTable"></div>
+            </div>
+        </div>
+
+        <!-- Onglet Agenda -->
+        <div id="tab-agenda" class="tab-content">
+            <div class="card">
+                <h2 class="card-title"> Mon Agenda</h2>
+                <div style="display:flex; justify-content:flex-end; margin-bottom:16px;">
+                    <button class="btn btn-primary" onclick="showAddEventModalCE()">+ Nouvel Événement</button>
+                </div>
+                <div id="agendaContainerCE"></div>
             </div>
         </div>
     </div>
@@ -1037,6 +1049,198 @@
                 const d = await r.json();
                 return d.success ? d.data : [];
             } catch(e) { return []; }
+        }
+
+
+        // ========== AGENDA CE ==========
+        let currentEventIdCE = null;
+        let allUsersCE = [];
+
+        async function loadAgendaCE() {
+            try {
+                const r = await fetch('api/agenda.php');
+                const d = await r.json();
+                displayAgendaCE(d.success ? d.data : []);
+            } catch(e) { console.error('Erreur agenda:', e); }
+        }
+
+        function displayAgendaCE(events) {
+            const container = document.getElementById('agendaContainerCE');
+            if (!events.length) {
+                container.innerHTML = '<div class="empty-state">Aucun événement dans votre agenda</div>';
+                return;
+            }
+
+            const now = new Date();
+            const upcoming = events.filter(e => new Date(e.date_debut) >= now);
+            const past = events.filter(e => new Date(e.date_debut) < now);
+
+            let html = '';
+            
+            if (upcoming.length) {
+                html += '<h4 style="color:var(--bleu-france);margin:20px 0 12px;">À venir</h4>';
+                html += '<div style="display:grid;gap:12px;">';
+                upcoming.forEach(e => html += renderEventCardCE(e, false));
+                html += '</div>';
+            }
+            
+            if (past.length) {
+                html += '<h4 style="color:var(--gris-moyen);margin:24px 0 12px;">Passés</h4>';
+                html += '<div style="display:grid;gap:12px;opacity:0.7;">';
+                past.forEach(e => html += renderEventCardCE(e, true));
+                html += '</div>';
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function renderEventCardCE(e, past) {
+            const debut = new Date(e.date_debut);
+            const fin = new Date(e.date_fin);
+            const isCreator = e.id_createur == currentUser.id;
+            const badge = isCreator 
+                ? '<span style="background:#000091;color:#fff;padding:2px 6px;font-size:10px;font-weight:700;border-radius:3px;">CRÉATEUR</span>'
+                : '<span style="background:#18753C;color:#fff;padding:2px 6px;font-size:10px;font-weight:700;border-radius:3px;">PARTICIPANT</span>';
+            
+            return `
+                <div style="background:#fff;border:1px solid #E5E5E5;padding:16px;${past ? 'opacity:0.6;' : ''}">
+                    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;">
+                        <div>
+                            <strong style="font-size:15px;color:var(--bleu-france);">${e.titre}</strong>
+                            ${badge}
+                        </div>
+                        ${isCreator && !past ? `<div style="display:flex;gap:6px;">
+                            <button class="btn btn-warning btn-small" onclick="showEditEventModalCE(${e.id_evenement})" style="font-size:11px;padding:4px 8px;">✏️</button>
+                            <button class="btn btn-danger btn-small" onclick="deleteEventCE(${e.id_evenement})" style="font-size:11px;padding:4px 8px;">🗑️</button>
+                        </div>` : ''}
+                    </div>
+                    <div style="font-size:12px;color:#666;margin-bottom:8px;">
+                        📅 ${debut.toLocaleDateString('fr-FR')} ${debut.toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'})}
+                        → ${fin.toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'})}
+                        ${e.lieu ? `<br>📍 ${e.lieu}` : ''}
+                    </div>
+                    ${e.description ? `<div style="font-size:13px;margin-bottom:8px;">${e.description}</div>` : ''}
+                    <div style="font-size:11px;color:#999;">
+                        👥 ${e.nb_participants} participant(s) • Créé par ${e.createur_prenom} ${e.createur_nom}
+                    </div>
+                </div>
+            `;
+        }
+
+        async function loadAllUsersCE() {
+            try {
+                const r = await fetch('api/utilisateurs.php');
+                const d = await r.json();
+                allUsersCE = d.success ? d.data.filter(u => u.actif) : [];
+            } catch(e) { console.error('Erreur users:', e); }
+        }
+
+        function showAddEventModalCE() {
+            currentEventIdCE = null;
+            document.getElementById('eventModalTitleCE').textContent = 'Nouvel Événement';
+            document.getElementById('eventIdCE').value = '';
+            document.getElementById('eventTitreCE').value = '';
+            document.getElementById('eventDescriptionCE').value = '';
+            document.getElementById('eventDebutCE').value = '';
+            document.getElementById('eventFinCE').value = '';
+            document.getElementById('eventLieuCE').value = '';
+            
+            const sel = document.getElementById('eventParticipantsCE');
+            sel.innerHTML = '';
+            allUsersCE.forEach(u => {
+                if (u.id_utilisateur != currentUser.id) {
+                    sel.innerHTML += `<option value="${u.id_utilisateur}">${u.prenom} ${u.nom} (${u.role})</option>`;
+                }
+            });
+            
+            document.getElementById('eventAlertCE').className = 'alert';
+            document.getElementById('eventModalCE').classList.add('show');
+        }
+
+        async function showEditEventModalCE(id) {
+            try {
+                const r = await fetch('api/agenda.php');
+                const d = await r.json();
+                const event = d.data.find(e => e.id_evenement == id);
+                if (!event) return;
+                
+                currentEventIdCE = id;
+                document.getElementById('eventModalTitleCE').textContent = 'Modifier l\'Événement';
+                document.getElementById('eventIdCE').value = id;
+                document.getElementById('eventTitreCE').value = event.titre;
+                document.getElementById('eventDescriptionCE').value = event.description || '';
+                document.getElementById('eventDebutCE').value = event.date_debut.replace(' ', 'T').substring(0,16);
+                document.getElementById('eventFinCE').value = event.date_fin.replace(' ', 'T').substring(0,16);
+                document.getElementById('eventLieuCE').value = event.lieu || '';
+                
+                const sel = document.getElementById('eventParticipantsCE');
+                sel.innerHTML = '';
+                const partIds = event.participants.map(p => p.id_utilisateur);
+                allUsersCE.forEach(u => {
+                    if (u.id_utilisateur != currentUser.id) {
+                        const selected = partIds.includes(u.id_utilisateur) ? ' selected' : '';
+                        sel.innerHTML += `<option value="${u.id_utilisateur}"${selected}>${u.prenom} ${u.nom} (${u.role})</option>`;
+                    }
+                });
+                
+                document.getElementById('eventAlertCE').className = 'alert';
+                document.getElementById('eventModalCE').classList.add('show');
+            } catch(e) { console.error(e); }
+        }
+
+        function closeEventModalCE() {
+            document.getElementById('eventModalCE').classList.remove('show');
+        }
+
+        async function saveEventCE() {
+            const titre = document.getElementById('eventTitreCE').value.trim();
+            const desc  = document.getElementById('eventDescriptionCE').value.trim();
+            const debut = document.getElementById('eventDebutCE').value;
+            const fin   = document.getElementById('eventFinCE').value;
+            const lieu  = document.getElementById('eventLieuCE').value.trim();
+            
+            if (!titre || !debut || !fin) {
+                showAlertCE('eventAlertCE', 'Titre, date début et fin requis', 'error');
+                return;
+            }
+            
+            const sel = document.getElementById('eventParticipantsCE');
+            const participants = Array.from(sel.selectedOptions).map(o => o.value);
+            
+            const fd = new FormData();
+            if (currentEventIdCE) {
+                fd.append('_method', 'PUT');
+                fd.append('id', currentEventIdCE);
+            }
+            fd.append('titre', titre);
+            fd.append('description', desc);
+            fd.append('date_debut', debut.replace('T', ' ') + ':00');
+            fd.append('date_fin', fin.replace('T', ' ') + ':00');
+            fd.append('lieu', lieu);
+            fd.append('participants', JSON.stringify(participants));
+            
+            try {
+                const r = await fetch('api/agenda.php', { method: 'POST', body: fd });
+                const d = await r.json();
+                if (d.success) {
+                    showAlertCE('eventAlertCE', '✓ Enregistré !', 'success');
+                    setTimeout(() => { closeEventModalCE(); loadAgendaCE(); }, 1500);
+                } else {
+                    showAlertCE('eventAlertCE', d.message || 'Erreur', 'error');
+                }
+            } catch(e) { showAlertCE('eventAlertCE', 'Erreur serveur', 'error'); }
+        }
+
+        async function deleteEventCE(id) {
+            if (!confirm('Supprimer cet événement ?')) return;
+            const fd = new FormData();
+            fd.append('_method', 'DELETE');
+            fd.append('id', id);
+            try {
+                const r = await fetch('api/agenda.php', { method: 'POST', body: fd });
+                const d = await r.json();
+                if (d.success) loadAgendaCE();
+            } catch(e) { console.error(e); }
         }
 
         async function checkSession() {
@@ -1586,14 +1790,23 @@
                 container.innerHTML = '<div class="empty-state">Aucune demande</div>';
                 return;
             }
-            let html = '<table><thead><tr><th>Professeur</th><th>Motif</th><th>Date Demandée</th><th>Statut</th><th>Date Demande</th></tr></thead><tbody>';
+            const badgeStatut = s => ({
+                'en_attente': '<span class="badge badge-inactive">En attente</span>',
+                'programmee': '<span class="badge" style="background:#E8EAF6;color:#000091;">Programmée</span>',
+                'realisee':   '<span class="badge badge-active">Réalisée</span>',
+                'annulee':    '<span class="badge" style="background:#E5E5E5;color:#666;">Annulée</span>'
+            }[s] || s);
+            let html = '<table><thead><tr><th>Date demande</th><th>Professeur</th><th>Type</th><th>Description</th><th>Statut</th><th>Date programmée</th></tr></thead><tbody>';
             inspections.forEach(insp => {
+                const desc = insp.description ? insp.description.substring(0, 50) + '...' : '—';
+                const dateP = insp.date_programmee ? new Date(insp.date_programmee).toLocaleDateString('fr-FR') : '—';
                 html += `<tr>
-                    <td>${insp.prof_nom} ${insp.prof_prenom}</td>
-                    <td>${insp.motif.substring(0, 50)}...</td>
-                    <td>${insp.date_demandee ? new Date(insp.date_demandee).toLocaleDateString('fr-FR') : '-'}</td>
-                    <td><span class="badge badge-${insp.statut === 'en_attente' ? 'pending' : insp.statut === 'planifiee' ? 'active' : 'inactive'}">${insp.statut}</span></td>
                     <td>${new Date(insp.date_demande).toLocaleDateString('fr-FR')}</td>
+                    <td>${insp.prof_nom} ${insp.prof_prenom}</td>
+                    <td>${insp.type_inspection}</td>
+                    <td>${desc}</td>
+                    <td>${badgeStatut(insp.statut)}</td>
+                    <td>${dateP}</td>
                 </tr>`;
             });
             html += '</tbody></table>';
@@ -2008,6 +2221,54 @@
         
         checkSession();
         loadSanctions();
+        loadAllUsersCE();
+        loadAgendaCE();
     </script>
+
+    <!-- Modal Événement Agenda -->
+    <div id="eventModalCE" class="modal">
+        <div class="modal-content" style="max-width:700px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="eventModalTitleCE">Nouvel Événement</h3>
+                <button class="btn-close" onclick="closeEventModalCE()">&times;</button>
+            </div>
+            <div style="padding:24px;">
+                <div id="eventAlertCE" class="alert"></div>
+                <input type="hidden" id="eventIdCE">
+                <div class="form-group">
+                    <label class="form-label">Titre *</label>
+                    <input type="text" id="eventTitreCE" class="form-input" placeholder="Réunion, inspection...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea id="eventDescriptionCE" class="form-textarea" rows="3"></textarea>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div class="form-group">
+                        <label class="form-label">Date/Heure début *</label>
+                        <input type="datetime-local" id="eventDebutCE" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Date/Heure fin *</label>
+                        <input type="datetime-local" id="eventFinCE" class="form-input">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Lieu</label>
+                    <input type="text" id="eventLieuCE" class="form-input" placeholder="Salle, établissement...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Participants</label>
+                    <select id="eventParticipantsCE" class="form-select" multiple size="5" style="height:120px;"></select>
+                    <small style="color:#666;font-size:11px;">Maintenez Ctrl/Cmd pour sélectionner plusieurs</small>
+                </div>
+                <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:16px;">
+                    <button class="btn" onclick="closeEventModalCE()" style="background:var(--gris-clair);color:var(--gris-moyen);">Annuler</button>
+                    <button class="btn btn-primary" onclick="saveEventCE()">Enregistrer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>

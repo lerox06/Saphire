@@ -134,6 +134,21 @@
         .alert.show { display: block; }
         .alert-success { background: #E8F5E9; color: var(--vert-succes); border-left: 4px solid var(--vert-succes); }
         .alert-error { background: #FEE; color: var(--rouge-marianne); border-left: 4px solid var(--rouge-marianne); }
+        .form-group { margin-bottom: 16px; }
+        .form-label {
+            display: block; font-size: 12px; font-weight: 700;
+            color: var(--rouge-marianne); text-transform: uppercase;
+            letter-spacing: 0.5px; margin-bottom: 8px;
+        }
+        .form-input, .form-textarea, .form-select {
+            width: 100%; padding: 10px 12px; border: 1px solid #E5E5E5;
+            font-size: 13px; font-family: inherit; transition: border-color 0.2s;
+        }
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none; border-color: var(--bleu-france);
+        }
+        .form-textarea { resize: vertical; }
+        .form-select[multiple] { padding: 4px; }
     </style>
 </head>
 <body>
@@ -158,6 +173,7 @@
             <button class="tab active" onclick="switchTab('inspections')">Demandes d'Inspection</button>
             <button class="tab" onclick="switchTab('professeurs')">Professeurs</button>
             <button class="tab" onclick="switchTab('sanctions')">Sanctions</button>
+            <button class="tab" onclick="switchTab('agenda')">📅 Agenda</button>
         </div>
         
         <!-- Onglet Inspections -->
@@ -182,6 +198,17 @@
             <div class="card">
                 <h2 class="card-title">Sanctions</h2>
                 <div id="sanctionsTable"></div>
+            </div>
+        </div>
+
+        <!-- Onglet Agenda -->
+        <div id="tab-agenda" class="tab-content">
+            <div class="card">
+                <h2 class="card-title">📅 Mon Agenda</h2>
+                <div style="display:flex; justify-content:flex-end; margin-bottom:16px;">
+                    <button class="btn btn-primary" onclick="showAddEventModalIA()">+ Nouvel Événement</button>
+                </div>
+                <div id="agendaContainerIA"></div>
             </div>
         </div>
     </div>
@@ -253,12 +280,15 @@
                     window.location.href = 'index.html';
                     return;
                 }
-                currentUser = data;
+                currentUser = data.user || data; // Stocker data.user si existe, sinon data
+                currentUser.id = currentUser.id || data.user?.id; // S'assurer que .id existe
                 document.getElementById('userName').textContent = `${data.prenom} ${data.nom}`;
                 await Promise.all([
                     loadInspections(),
                     loadProfesseurs(),
-                    loadSanctions()
+                    loadSanctions(),
+                    loadAllUsersIA(),
+                    loadAgendaIA()
                 ]);
             } catch(e) { window.location.href = 'index.html'; }
         }
@@ -342,7 +372,8 @@
                         <button class="btn btn-primary" style="font-size:11px;padding:6px 12px;" onclick="showFicheProf(${i.id_professeur})">Fiche</button>
                         ${i.statut === 'en_attente' ? `<button class="btn" style="background:#000091;color:#fff;font-size:11px;padding:6px 12px;" onclick="showProgrammer(${i.id_inspection})">📅 Programmer</button>` : ''}
                         ${i.statut === 'programmee' ? `<button class="btn" style="background:var(--vert-succes);color:#fff;font-size:11px;padding:6px 12px;" onclick="showRapport(${i.id_inspection}, '${i.prof_nom} ${i.prof_prenom}', '${dateP}')">✍ Rapport</button>` : ''}
-                        ${i.statut === 'realisee' && i.commentaire ? `<button class="btn" style="background:#666;color:#fff;font-size:11px;padding:6px 12px;" onclick="exportRapportPDF(${i.id_inspection})">📄 PDF</button>` : ''}
+                        ${i.statut === 'realisee' && i.commentaire ? `<button class="btn btn-warning" style="font-size:11px;padding:6px 12px;" onclick="editRapport(${i.id_inspection}, '${i.prof_nom} ${i.prof_prenom}', '${dateP}')">✏️ Modifier</button>` : ''}
+                        ${i.statut === 'realisee' && i.commentaire ? `<button class="btn" style="background:#666;color:#fff;font-size:11px;padding:6px 12px;margin-left:4px;" onclick="exportRapportPDF(${i.id_inspection})">📄 PDF</button>` : ''}
                     </td>
                 </tr>`;
             });
@@ -393,6 +424,24 @@
             document.getElementById('rapportTexte').value = '';
             document.getElementById('rapportAlert').className = 'alert';
             document.getElementById('rapportModal').classList.add('show');
+        }
+
+        async function editRapport(idInspection, nomProf, dateP) {
+            currentInspectionId = idInspection;
+            // Charger le rapport existant
+            try {
+                const r = await fetch('api/inspections.php');
+                const d = await r.json();
+                const insp = d.data?.find(i => i.id_inspection == idInspection);
+                
+                document.getElementById('rapportProfNom').textContent = nomProf;
+                document.getElementById('rapportDate').textContent = dateP;
+                document.getElementById('rapportTexte').value = insp?.commentaire || '';
+                document.getElementById('rapportAlert').className = 'alert';
+                document.getElementById('rapportModal').classList.add('show');
+            } catch(e) {
+                console.error('Erreur chargement rapport:', e);
+            }
         }
 
         function closeRapportModal() {
@@ -537,11 +586,14 @@
         async function loadSanctions() {
             try {
                 let url = 'api/sanctions.php';
+                console.log('currentUser:', currentUser); // DEBUG
                 if (currentUser.role === 'IA' && currentUser.id_etablissement) {
                     url += `?id_etablissement=${currentUser.id_etablissement}`;
                 }
+                console.log('Loading sanctions from:', url); // DEBUG
                 const r = await fetch(url);
                 const d = await r.json();
+                console.log('Sanctions response:', d); // DEBUG
                 displaySanctions(d.success ? d.data : []);
             } catch(e) { console.error('Erreur sanctions:', e); }
         }
@@ -571,6 +623,198 @@
             container.innerHTML = html;
         }
 
+
+        // ========== AGENDA IA ==========
+        let currentEventIdIA = null;
+        let allUsersIA = [];
+
+        async function loadAgendaIA() {
+            try {
+                const r = await fetch('api/agenda.php');
+                const d = await r.json();
+                displayAgendaIA(d.success ? d.data : []);
+            } catch(e) { console.error('Erreur agenda:', e); }
+        }
+
+        function displayAgendaIA(events) {
+            const container = document.getElementById('agendaContainerIA');
+            if (!events.length) {
+                container.innerHTML = '<div class="empty-state">Aucun événement dans votre agenda</div>';
+                return;
+            }
+
+            const now = new Date();
+            const upcoming = events.filter(e => new Date(e.date_debut) >= now);
+            const past = events.filter(e => new Date(e.date_debut) < now);
+
+            let html = '';
+            
+            if (upcoming.length) {
+                html += '<h4 style="color:var(--bleu-france);margin:20px 0 12px;">À venir</h4>';
+                html += '<div style="display:grid;gap:12px;">';
+                upcoming.forEach(e => html += renderEventCardIA(e, false));
+                html += '</div>';
+            }
+            
+            if (past.length) {
+                html += '<h4 style="color:var(--gris-moyen);margin:24px 0 12px;">Passés</h4>';
+                html += '<div style="display:grid;gap:12px;opacity:0.7;">';
+                past.forEach(e => html += renderEventCardIA(e, true));
+                html += '</div>';
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function renderEventCardIA(e, past) {
+            const debut = new Date(e.date_debut);
+            const fin = new Date(e.date_fin);
+            const isCreator = e.id_createur == currentUser.id;
+            const badge = isCreator 
+                ? '<span style="background:#000091;color:#fff;padding:2px 6px;font-size:10px;font-weight:700;border-radius:3px;">CRÉATEUR</span>'
+                : '<span style="background:#18753C;color:#fff;padding:2px 6px;font-size:10px;font-weight:700;border-radius:3px;">PARTICIPANT</span>';
+            
+            return `
+                <div style="background:#fff;border:1px solid #E5E5E5;padding:16px;${past ? 'opacity:0.6;' : ''}">
+                    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;">
+                        <div>
+                            <strong style="font-size:15px;color:var(--bleu-france);">${e.titre}</strong>
+                            ${badge}
+                        </div>
+                        ${isCreator && !past ? `<div style="display:flex;gap:6px;">
+                            <button class="btn btn-warning btn-small" onclick="showEditEventModalIA(${e.id_evenement})" style="font-size:11px;padding:4px 8px;">✏️</button>
+                            <button class="btn btn-danger btn-small" onclick="deleteEventIA(${e.id_evenement})" style="font-size:11px;padding:4px 8px;">🗑️</button>
+                        </div>` : ''}
+                    </div>
+                    <div style="font-size:12px;color:#666;margin-bottom:8px;">
+                        📅 ${debut.toLocaleDateString('fr-FR')} ${debut.toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'})}
+                        → ${fin.toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'})}
+                        ${e.lieu ? `<br>📍 ${e.lieu}` : ''}
+                    </div>
+                    ${e.description ? `<div style="font-size:13px;margin-bottom:8px;">${e.description}</div>` : ''}
+                    <div style="font-size:11px;color:#999;">
+                        👥 ${e.nb_participants} participant(s) • Créé par ${e.createur_prenom} ${e.createur_nom}
+                    </div>
+                </div>
+            `;
+        }
+
+        async function loadAllUsersIA() {
+            try {
+                const r = await fetch('api/utilisateurs.php');
+                const d = await r.json();
+                allUsersIA = d.success ? d.data.filter(u => u.actif) : [];
+            } catch(e) { console.error('Erreur users:', e); }
+        }
+
+        function showAddEventModalIA() {
+            currentEventIdIA = null;
+            document.getElementById('eventModalTitleIA').textContent = 'Nouvel Événement';
+            document.getElementById('eventIdIA').value = '';
+            document.getElementById('eventTitreIA').value = '';
+            document.getElementById('eventDescriptionIA').value = '';
+            document.getElementById('eventDebutIA').value = '';
+            document.getElementById('eventFinIA').value = '';
+            document.getElementById('eventLieuIA').value = '';
+            
+            const sel = document.getElementById('eventParticipantsIA');
+            sel.innerHTML = '';
+            allUsersIA.forEach(u => {
+                if (u.id_utilisateur != currentUser.id) {
+                    sel.innerHTML += `<option value="${u.id_utilisateur}">${u.prenom} ${u.nom} (${u.role})</option>`;
+                }
+            });
+            
+            document.getElementById('eventAlertIA').className = 'alert';
+            document.getElementById('eventModalIA').classList.add('show');
+        }
+
+        async function showEditEventModalIA(id) {
+            try {
+                const r = await fetch('api/agenda.php');
+                const d = await r.json();
+                const event = d.data.find(e => e.id_evenement == id);
+                if (!event) return;
+                
+                currentEventIdIA = id;
+                document.getElementById('eventModalTitleIA').textContent = 'Modifier l\'Événement';
+                document.getElementById('eventIdIA').value = id;
+                document.getElementById('eventTitreIA').value = event.titre;
+                document.getElementById('eventDescriptionIA').value = event.description || '';
+                document.getElementById('eventDebutIA').value = event.date_debut.replace(' ', 'T').substring(0,16);
+                document.getElementById('eventFinIA').value = event.date_fin.replace(' ', 'T').substring(0,16);
+                document.getElementById('eventLieuIA').value = event.lieu || '';
+                
+                const sel = document.getElementById('eventParticipantsIA');
+                sel.innerHTML = '';
+                const partIds = event.participants.map(p => p.id_utilisateur);
+                allUsersIA.forEach(u => {
+                    if (u.id_utilisateur != currentUser.id) {
+                        const selected = partIds.includes(u.id_utilisateur) ? ' selected' : '';
+                        sel.innerHTML += `<option value="${u.id_utilisateur}"${selected}>${u.prenom} ${u.nom} (${u.role})</option>`;
+                    }
+                });
+                
+                document.getElementById('eventAlertIA').className = 'alert';
+                document.getElementById('eventModalIA').classList.add('show');
+            } catch(e) { console.error(e); }
+        }
+
+        function closeEventModalIA() {
+            document.getElementById('eventModalIA').classList.remove('show');
+        }
+
+        async function saveEventIA() {
+            const titre = document.getElementById('eventTitreIA').value.trim();
+            const desc  = document.getElementById('eventDescriptionIA').value.trim();
+            const debut = document.getElementById('eventDebutIA').value;
+            const fin   = document.getElementById('eventFinIA').value;
+            const lieu  = document.getElementById('eventLieuIA').value.trim();
+            
+            if (!titre || !debut || !fin) {
+                showAlert('eventAlertIA', 'Titre, date début et fin requis', 'error');
+                return;
+            }
+            
+            const sel = document.getElementById('eventParticipantsIA');
+            const participants = Array.from(sel.selectedOptions).map(o => o.value);
+            
+            const fd = new FormData();
+            if (currentEventIdIA) {
+                fd.append('_method', 'PUT');
+                fd.append('id', currentEventIdIA);
+            }
+            fd.append('titre', titre);
+            fd.append('description', desc);
+            fd.append('date_debut', debut.replace('T', ' ') + ':00');
+            fd.append('date_fin', fin.replace('T', ' ') + ':00');
+            fd.append('lieu', lieu);
+            fd.append('participants', JSON.stringify(participants));
+            
+            try {
+                const r = await fetch('api/agenda.php', { method: 'POST', body: fd });
+                const d = await r.json();
+                if (d.success) {
+                    showAlert('eventAlertIA', '✓ Enregistré !', 'success');
+                    setTimeout(() => { closeEventModalIA(); loadAgendaIA(); }, 1500);
+                } else {
+                    showAlert('eventAlertIA', d.message || 'Erreur', 'error');
+                }
+            } catch(e) { showAlert('eventAlertIA', 'Erreur serveur', 'error'); }
+        }
+
+        async function deleteEventIA(id) {
+            if (!confirm('Supprimer cet événement ?')) return;
+            const fd = new FormData();
+            fd.append('_method', 'DELETE');
+            fd.append('id', id);
+            try {
+                const r = await fetch('api/agenda.php', { method: 'POST', body: fd });
+                const d = await r.json();
+                if (d.success) loadAgendaIA();
+            } catch(e) { console.error(e); }
+        }
+
         function exportRapportPDF(idInspection) {
             window.open(`api/export_pdf_rapport.php?id=${idInspection}`, '_blank');
         }
@@ -584,5 +828,51 @@
 
         checkSession();
     </script>
+
+    <!-- Modal Événement Agenda -->
+    <div id="eventModalIA" class="modal">
+        <div class="modal-content" style="max-width:700px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="eventModalTitleIA">Nouvel Événement</h3>
+                <button class="btn-close" onclick="closeEventModalIA()">&times;</button>
+            </div>
+            <div style="padding:24px;">
+                <div id="eventAlertIA" class="alert"></div>
+                <input type="hidden" id="eventIdIA">
+                <div class="form-group">
+                    <label class="form-label">Titre *</label>
+                    <input type="text" id="eventTitreIA" class="form-input" placeholder="Réunion, inspection...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea id="eventDescriptionIA" class="form-textarea" rows="3"></textarea>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div class="form-group">
+                        <label class="form-label">Date/Heure début *</label>
+                        <input type="datetime-local" id="eventDebutIA" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Date/Heure fin *</label>
+                        <input type="datetime-local" id="eventFinIA" class="form-input">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Lieu</label>
+                    <input type="text" id="eventLieuIA" class="form-input" placeholder="Salle, établissement...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Participants</label>
+                    <select id="eventParticipantsIA" class="form-select" multiple size="5" style="height:120px;"></select>
+                    <small style="color:#666;font-size:11px;">Maintenez Ctrl/Cmd pour sélectionner plusieurs</small>
+                </div>
+                <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:16px;">
+                    <button class="btn" onclick="closeEventModalIA()" style="background:var(--gris-clair);color:var(--gris-moyen);">Annuler</button>
+                    <button class="btn btn-primary" onclick="saveEventIA()">Enregistrer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
