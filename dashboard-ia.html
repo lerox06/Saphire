@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inspecteur Académique — Sterling</title>
+    <!-- Quill Editor -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
@@ -173,13 +176,16 @@
             <button class="tab active" onclick="switchTab('inspections')">Demandes d'Inspection</button>
             <button class="tab" onclick="switchTab('professeurs')">Professeurs</button>
             <button class="tab" onclick="switchTab('sanctions')">Sanctions</button>
-            <button class="tab" onclick="switchTab('agenda')">📅 Agenda</button>
+            <button class="tab" onclick="switchTab('agenda')">Agenda</button>
         </div>
         
         <!-- Onglet Inspections -->
         <div id="tab-inspections" class="tab-content active">
             <div class="card">
                 <h2 class="card-title">Demandes d'Inspection</h2>
+                <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+                    <button class="btn btn-primary" onclick="showAddInspectionModalIA()">+ Nouvelle Inspection</button>
+                </div>
                 <div id="inspectionsStats" class="stat-cards"></div>
                 <div id="inspectionsTable"></div>
             </div>
@@ -204,7 +210,7 @@
         <!-- Onglet Agenda -->
         <div id="tab-agenda" class="tab-content">
             <div class="card">
-                <h2 class="card-title">📅 Mon Agenda</h2>
+                <h2 class="card-title">Mon Agenda</h2>
                 <div style="display:flex; justify-content:flex-end; margin-bottom:16px;">
                     <button class="btn btn-primary" onclick="showAddEventModalIA()">+ Nouvel Événement</button>
                 </div>
@@ -245,6 +251,45 @@
         </div>
     </div>
 
+    <!-- Modal Nouvelle Inspection -->
+    <div id="inspectionModalIA" class="modal">
+        <div class="modal-content" style="max-width:600px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Nouvelle Demande d'Inspection</h3>
+                <button class="btn-close" onclick="closeInspectionModalIA()">&times;</button>
+            </div>
+            <div style="padding:24px;">
+                <div id="inspectionAlertIA" class="alert"></div>
+                <div class="form-group">
+                    <label class="form-label">Professeur *</label>
+                    <select id="inspProfesseurIA" class="form-select">
+                        <option value="">Sélectionner...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Type d'inspection *</label>
+                    <select id="inspTypeIA" class="form-select">
+                        <option value="pedagogique">Pédagogique</option>
+                        <option value="administrative">Administrative</option>
+                        <option value="autre">Autre</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description / Motif *</label>
+                    <textarea id="inspDescriptionIA" class="form-textarea" rows="3" placeholder="Décrivez la raison de cette inspection..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date programmée</label>
+                    <input type="date" id="inspDateIA" class="form-input">
+                </div>
+                <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:16px;">
+                    <button class="btn" onclick="closeInspectionModalIA()" style="background:var(--gris-clair);color:var(--gris-moyen);">Annuler</button>
+                    <button class="btn btn-primary" onclick="saveInspectionIA()">Enregistrer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Rapport Inspection -->
     <div id="rapportModal" class="modal">
         <div class="modal-content" style="max-width: 700px;">
@@ -258,7 +303,8 @@
                 <p style="margin-bottom:16px;font-size:13px;">Date programmée : <strong id="rapportDate"></strong></p>
                 <div style="margin-bottom:16px;">
                     <label style="display:block;font-weight:700;margin-bottom:8px;font-size:12px;color:var(--rouge-marianne);">Rapport *</label>
-                    <textarea id="rapportTexte" class="form-textarea" rows="8" placeholder="Rédigez votre rapport d'inspection..."></textarea>
+                    <div id="rapportEditor" style="height:300px;background:#fff;"></div>
+                    <input type="hidden" id="rapportTexte">
                 </div>
                 <div style="display:flex;gap:12px;justify-content:flex-end;">
                     <button class="btn" onclick="closeRapportModal()" style="background:var(--gris-clair);color:var(--gris-moyen);">Annuler</button>
@@ -308,6 +354,73 @@
         }
 
         // ========== INSPECTIONS ==========
+        async function showAddInspectionModalIA() {
+            // Charger la liste des professeurs si pas déjà fait
+            if (!window.professeurs || professeurs.length === 0) {
+                await loadProfesseurs();
+            }
+            
+            const sel = document.getElementById('inspProfesseurIA');
+            sel.innerHTML = '<option value="">Sélectionner...</option>';
+            
+            // Filtrer par établissement si IA
+            let profs = window.professeurs || [];
+            if (currentUser.role === 'IA' && currentUser.id_etablissement) {
+                profs = profs.filter(p => p.id_etablissement == currentUser.id_etablissement);
+            }
+            
+            profs.forEach(p => {
+                sel.innerHTML += `<option value="${p.id_professeur}">${p.nom} ${p.prenom} — ${p.discipline_enseignee}</option>`;
+            });
+            
+            document.getElementById('inspTypeIA').value = 'pedagogique';
+            document.getElementById('inspDescriptionIA').value = '';
+            document.getElementById('inspDateIA').value = '';
+            document.getElementById('inspectionAlertIA').className = 'alert';
+            document.getElementById('inspectionModalIA').classList.add('show');
+        }
+
+        function closeInspectionModalIA() {
+            document.getElementById('inspectionModalIA').classList.remove('show');
+        }
+
+        async function saveInspectionIA() {
+            const prof = document.getElementById('inspProfesseurIA').value;
+            const type = document.getElementById('inspTypeIA').value;
+            const desc = document.getElementById('inspDescriptionIA').value.trim();
+            const date = document.getElementById('inspDateIA').value;
+            
+            if (!prof || !type || !desc) {
+                showAlert('inspectionAlertIA', 'Professeur, type et description requis', 'error');
+                return;
+            }
+            
+            const fd = new FormData();
+            fd.append('id_professeur', prof);
+            fd.append('type_inspection', type);
+            fd.append('description', desc);
+            if (date) {
+                fd.append('date_programmee', date);
+                fd.append('statut', 'programmee'); // Si date fournie, programmée directement
+            }
+            
+            try {
+                const r = await fetch('api/inspections.php', { method: 'POST', body: fd });
+                const d = await r.json();
+                if (d.success) {
+                    showAlert('inspectionAlertIA', '✓ Inspection créée !', 'success');
+                    setTimeout(() => { closeInspectionModalIA(); loadInspections(); }, 1500);
+                } else {
+                    showAlert('inspectionAlertIA', d.message || 'Erreur', 'error');
+                }
+            } catch(e) {
+                showAlert('inspectionAlertIA', 'Erreur serveur', 'error');
+            }
+        }
+
+        // Stocker les professeurs globalement
+        let professeurs = [];
+
         async function loadInspections() {
             try {
                 let url = 'api/inspections.php';
@@ -417,13 +530,38 @@
             } catch(e) { showAlert('programmerAlert', 'Erreur serveur', 'error'); }
         }
 
+        let quillEditor = null;
+
         function showRapport(idInspection, nomProf, dateP) {
             currentInspectionId = idInspection;
             document.getElementById('rapportProfNom').textContent = nomProf;
             document.getElementById('rapportDate').textContent = dateP;
-            document.getElementById('rapportTexte').value = '';
             document.getElementById('rapportAlert').className = 'alert';
             document.getElementById('rapportModal').classList.add('show');
+            
+            // Initialiser Quill
+            setTimeout(() => {
+                if (!quillEditor) {
+                    quillEditor = new Quill('#rapportEditor', {
+                        theme: 'snow',
+                        modules: {
+                            toolbar: [
+                                [{ 'header': [1, 2, 3, false] }],
+                                ['bold', 'italic', 'underline', 'strike'],
+                                [{ 'color': [] }, { 'background': [] }],
+                                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                                [{ 'align': [] }],
+                                ['blockquote', 'code-block'],
+                                ['link'],
+                                ['clean']
+                            ]
+                        },
+                        placeholder: 'Rédigez votre rapport d\'inspection détaillé...'
+                    });
+                }
+                quillEditor.setContents([]);
+                quillEditor.setText('');
+            }, 100);
         }
 
         async function editRapport(idInspection, nomProf, dateP) {
@@ -436,9 +574,33 @@
                 
                 document.getElementById('rapportProfNom').textContent = nomProf;
                 document.getElementById('rapportDate').textContent = dateP;
-                document.getElementById('rapportTexte').value = insp?.commentaire || '';
                 document.getElementById('rapportAlert').className = 'alert';
                 document.getElementById('rapportModal').classList.add('show');
+                
+                // Initialiser Quill et charger le contenu HTML
+                setTimeout(() => {
+                    if (!quillEditor) {
+                        quillEditor = new Quill('#rapportEditor', {
+                            theme: 'snow',
+                            modules: {
+                                toolbar: [
+                                    [{ 'header': [1, 2, 3, false] }],
+                                    ['bold', 'italic', 'underline', 'strike'],
+                                    [{ 'color': [] }, { 'background': [] }],
+                                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                                    [{ 'align': [] }],
+                                    ['blockquote', 'code-block'],
+                                    ['link'],
+                                    ['clean']
+                                ]
+                            }
+                        });
+                    }
+                    
+                    // Charger le HTML dans Quill
+                    const html = insp?.commentaire || '';
+                    quillEditor.root.innerHTML = html;
+                }, 100);
             } catch(e) {
                 console.error('Erreur chargement rapport:', e);
             }
@@ -446,19 +608,27 @@
 
         function closeRapportModal() {
             document.getElementById('rapportModal').classList.remove('show');
+            if (quillEditor) {
+                quillEditor.setText(''); // Nettoyer l'éditeur
+            }
         }
 
         async function saveRapport() {
-            const texte = document.getElementById('rapportTexte').value.trim();
-            if (!texte) {
-                showAlert('rapportAlert', 'Le rapport est requis', 'error');
+            const html = quillEditor.root.innerHTML;
+            const text = quillEditor.getText().trim();
+    
+    // Vérifier que le rapport n'est pas vide
+            if (!text || text.length < 5) {
+                showAlert('rapportAlert', 'Le rapport doit contenir du contenu', 'error');
                 return;
             }
+    
             const fd = new FormData();
             fd.append('_method', 'PUT');
             fd.append('id', currentInspectionId);
+            fd.append('commentaire', html); // On envoie le HTML pour garder la mise en forme
             fd.append('statut', 'realisee');
-            fd.append('commentaire', texte);
+    
             try {
                 const r = await fetch('api/inspections.php', { method: 'POST', body: fd });
                 const d = await r.json();
@@ -468,7 +638,9 @@
                 } else {
                     showAlert('rapportAlert', d.message || 'Erreur', 'error');
                 }
-            } catch(e) { showAlert('rapportAlert', 'Erreur serveur', 'error'); }
+            } catch(e) { 
+                showAlert('rapportAlert', 'Erreur serveur', 'error'); 
+            }
         }
 
         // ========== PROFESSEURS ==========
@@ -480,7 +652,9 @@
                 }
                 const r = await fetch(url);
                 const d = await r.json();
-                displayProfesseurs(d.success ? d.data : []);
+                professeurs = d.success ? d.data : []; // Stocker globalement
+                window.professeurs = professeurs; // Aussi dans window
+                displayProfesseurs(professeurs);
             } catch(e) { console.error('Erreur profs:', e); }
         }
 
