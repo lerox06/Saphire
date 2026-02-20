@@ -84,8 +84,8 @@ if ($method === 'POST' && !isset($_POST['_method'])) {
     }
 
     try {
-        // CE/CEA : vérifier que le prof est dans leur établissement
-        if (has_role(['CE', 'CEA'])) {
+        // CE/CEA/IA : vérifier que le prof est dans leur établissement
+        if (has_role(['CE', 'CEA', 'IA'])) {
             $stmt = $pdo->prepare("SELECT id_etablissement FROM professeurs WHERE id_professeur = ?");
             $stmt->execute([intval($_POST['id_professeur'])]);
             $prof = $stmt->fetch();
