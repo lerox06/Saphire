@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recteur — Académie Sterling</title>
+    <style>
+        :root {
+            --bleu-france: #000091;
+            --rouge-marianne: #E1000F;
+            --blanc: #FFFFFF;
+            --gris-clair: #F6F6F6;
+            --gris-moyen: #929292;
+            --vert-succes: #18753C;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            background: var(--gris-clair);
+            color: #333;
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--bleu-france), var(--rouge-marianne));
+            color: var(--blanc);
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .logo-circle {
+            width: 50px;
+            height: 50px;
+            background: var(--blanc);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .logo-circle img { width: 100%; height: 100%; object-fit: cover; }
+        .header-title { 
+            font-size: 18px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .header-subtitle {
+            font-size: 11px;
+            opacity: 0.9;
+            text-transform: uppercase;
+        }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .user-info {
+            text-align: right;
+            font-size: 13px;
+        }
+        .user-name { font-weight: 700; }
+        .user-role { opacity: 0.9; font-size: 11px; }
+        .btn-logout {
+            background: rgba(255,255,255,0.2);
+            color: var(--blanc);
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            transition: background 0.2s;
+        }
+        .btn-logout:hover { background: rgba(255,255,255,0.3); }
+        
+        /* Navigation */
+        .nav {
+            background: var(--blanc);
+            padding: 0 32px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+        }
+        .tab {
+            padding: 14px 20px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--gris-moyen);
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .tab:hover { color: var(--bleu-france); }
+        .tab.active {
+            color: var(--bleu-france);
+            border-bottom-color: var(--rouge-marianne);
+        }
+        
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px 32px;
+        }
+        
+        /* Cards */
+        .card {
+            background: var(--blanc);
+            border: 1px solid #E5E5E5;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--bleu-france);
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--gris-clair);
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, var(--bleu-france), #0000C0);
+            color: var(--blanc);
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .stat-card.red { background: linear-gradient(135deg, var(--rouge-marianne), #C00000); }
+        .stat-card.green { background: linear-gradient(135deg, var(--vert-succes), #0F5228); }
+        .stat-card.purple { background: linear-gradient(135deg, #6E00FF, #4A00A8); }
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .stat-detail {
+            font-size: 11px;
+            opacity: 0.8;
+            margin-top: 8px;
+        }
+        
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        thead {
+            background: var(--gris-clair);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #E5E5E5;
+        }
+        tbody tr:hover { background: #FAFAFA; }
+        
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            border-radius: 3px;
+        }
+        .badge-active { background: #E8F5E9; color: var(--vert-succes); }
+        .badge-pending { background: #FFF3E0; color: #F57C00; }
+        .badge-inactive { background: #FFEBEE; color: var(--rouge-marianne); }
+        
+        /* Buttons */
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            transition: all 0.2s;
+            background: var(--gris-clair);
+            color: #333;
+        }
+        .btn:hover { opacity: 0.8; }
+        .btn-primary { background: var(--bleu-france); color: var(--blanc); }
+        .btn-small { padding: 6px 12px; font-size: 11px; }
+        
+        /* Tab content */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--gris-moyen);
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <div class="logo-circle">
+                <img src="logo-sterling.png" alt="Sterling" onerror="this.style.display='none'">
+            </div>
+            <div>
+                <div class="header-title">Académie Sterling</div>
+                <div class="header-subtitle">Espace Recteur</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="user-info">
+                <div class="user-name" id="userName">Chargement...</div>
+                <div class="user-role">Recteur d'Académie</div>
+            </div>
+            <button class="btn-logout" onclick="logout()">Déconnexion</button>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="nav">
+        <button class="tab active" onclick="switchTab('overview')">Vue d'Ensemble</button>
+        <button class="tab" onclick="switchTab('etablissements')">Établissements</button>
+        <button class="tab" onclick="switchTab('professeurs')">Professeurs</button>
+        <button class="tab" onclick="switchTab('inspections')">Inspections</button>
+        <button class="tab" onclick="switchTab('sanctions')">Sanctions</button>
+        <button class="tab" onclick="switchTab('analyses')"> Analyses</button>
+        <button class="tab" onclick="switchTab('agenda')"> Agenda</button>
+    </div>
+
+    <div class="container">
+        <!-- Onglet Vue d'Ensemble -->
+        <div id="tab-overview" class="tab-content active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Établissements</div>
+                    <div class="stat-value" id="statEtablissements">—</div>
+                    <div class="stat-detail">Dans l'académie</div>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-label">Professeurs</div>
+                    <div class="stat-value" id="statProfesseurs">—</div>
+                    <div class="stat-detail">Actifs</div>
+                </div>
+                <div class="stat-card purple">
+                    <div class="stat-label">Inspections</div>
+                    <div class="stat-value" id="statInspections">—</div>
+                    <div class="stat-detail">Cette année</div>
+                </div>
+                <div class="stat-card red">
+                    <div class="stat-label">Sanctions</div>
+                    <div class="stat-value" id="statSanctions">—</div>
+                    <div class="stat-detail">Actives</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">Performances par Établissement</h2>
+                <div id="performanceTable"></div>
+            </div>
+        </div>
+
+        <!-- Onglet Établissements -->
+        <div id="tab-etablissements" class="tab-content">
+            <div class="card">
+                <h2 class="card-title">Liste des Établissements</h2>
+                <div id="etablissementsTable"></div>
+            </div>
+        </div>
+
+        <!-- Onglet Professeurs -->
+        <div id="tab-professeurs" class="tab-content">
+            <div class="card">
+                <h2 class="card-title">Tous les Professeurs</h2>
+                <div style="margin-bottom:16px;">
+                    <select id="filterEtabProf" class="form-select" onchange="loadProfesseurs()" style="max-width:300px;padding:8px;">
+                        <option value="">Tous les établissements</option>
+                    </select>
+                </div>
+                <div id="professeursTable"></div>
+            </div>
+        </div>
+
+        <!-- Onglet Inspections -->
+        <div id="tab-inspections" class="tab-content">
+            <div class="card">
+                <h2 class="card-title">Inspections Académiques</h2>
+                <div id="inspectionsTable"></div>
+            </div>
+        </div>
+
+        <!-- Onglet Sanctions -->
+        <div id="tab-sanctions" class="tab-content">
+            <div class="card">
+                <h2 class="card-title">Sanctions</h2>
+                <div id="sanctionsTable"></div>
+            </div>
+        </div>
+
+        <!-- Onglet Analyses & Performance -->
+        <div id="tab-analyses" class="tab-content">
+            <div class="card">
+                <h2 class="card-title"> Indicateurs de Performance Académique</h2>
+                
+                <!-- KPIs globaux -->
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:32px;">
+                    <div style="background:#E8F5E9;padding:20px;border-left:4px solid #18753C;">
+                        <div style="font-size:11px;color:#666;text-transform:uppercase;margin-bottom:8px;">Taux d'assiduité</div>
+                        <div style="font-size:32px;font-weight:700;color:#18753C;" id="tauxAssiduite">—</div>
+                        <div style="font-size:10px;color:#999;margin-top:4px;">Appels réalisés / attendus</div>
+                    </div>
+                    <div style="background:#E3F2FD;padding:20px;border-left:4px solid #000091;">
+                        <div style="font-size:11px;color:#666;text-transform:uppercase;margin-bottom:8px;">Moyenne notations</div>
+                        <div style="font-size:32px;font-weight:700;color:#000091;" id="moyenneNotations">—</div>
+                        <div style="font-size:10px;color:#999;margin-top:4px;">Sur 20</div>
+                    </div>
+                    <div style="background:#FFF3E0;padding:20px;border-left:4px solid #F57C00;">
+                        <div style="font-size:11px;color:#666;text-transform:uppercase;margin-bottom:8px;">Inspections planifiées</div>
+                        <div style="font-size:32px;font-weight:700;color:#F57C00;" id="tauxInspections">—</div>
+                        <div style="font-size:10px;color:#999;margin-top:4px;">Taux de réalisation</div>
+                    </div>
+                    <div style="background:#FFEBEE;padding:20px;border-left:4px solid #E1000F;">
+                        <div style="font-size:11px;color:#666;text-transform:uppercase;margin-bottom:8px;">Sanctions actives</div>
+                        <div style="font-size:32px;font-weight:700;color:#E1000F;" id="tauxSanctions">—</div>
+                        <div style="font-size:10px;color:#999;margin-top:4px;">% professeurs concernés</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notations par établissement -->
+            <div class="card">
+                <h2 class="card-title">Évolution des Notations par Établissement</h2>
+                <div id="notationsEtabTable"></div>
+            </div>
+
+            <!-- Appels quotidiens -->
+            <div class="card">
+                <h2 class="card-title">Taux de Réalisation des Appels Quotidiens</h2>
+                <div id="appelsTable"></div>
+            </div>
+
+            <!-- Absences et sanctions -->
+            <div class="card">
+                <h2 class="card-title">Discipline et Assiduité</h2>
+                <div id="disciplineTable"></div>
+            </div>
+
+            <!-- Inspections par type -->
+            <div class="card">
+                <h2 class="card-title">Répartition des Inspections</h2>
+                <div id="inspectionsStatsTable"></div>
+            </div>
+        </div>
+
+        <!-- Onglet Agenda -->
+        <div id="tab-agenda" class="tab-content">
+            <div class="card">
+                <h2 class="card-title">📅 Mon Agenda</h2>
+                <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+                    <button class="btn btn-primary" onclick="showAddEventModalRecteur()">+ Nouvel Événement</button>
+                </div>
+                <div id="agendaContainerRecteur"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let etablissements = [];
+        let professeurs = [];
+
+        async function checkSession() {
+            try {
+                const response = await fetch('auth.php?action=check_session');
+                const data = await response.json();
+                if (!data.logged_in || data.role !== 'RECTEUR') {
+                    window.location.href = 'index.html';
+                    return;
+                }
+                currentUser = data;
+                document.getElementById('userName').textContent = `${data.prenom} ${data.nom}`;
+                await loadDashboard();
+            } catch(e) { window.location.href = 'index.html'; }
+        }
+
+        async function logout() {
+            const fd = new FormData();
+            fd.append('action', 'logout');
+            await fetch('auth.php', { method: 'POST', body: fd });
+            window.location.href = 'index.html';
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(`tab-${tab}`).classList.add('active');
+        }
+
+        async function loadDashboard() {
+            await Promise.all([
+                loadStats(),
+                loadEtablissements(),
+                loadProfesseurs(),
+                loadInspections(),
+                loadSanctions(),
+                loadAnalyses()
+            ]);
+        }
+
+        // ========== ANALYSES & PERFORMANCE ==========
+        async function loadAnalyses() {
+            try {
+                // Charger toutes les données nécessaires
+                const [appels, notations, absences, inspections, sanctions] = await Promise.all([
+                    fetch('api/appels.php').then(r => r.json()),
+                    fetch('api/notations.php').then(r => r.json()),
+                    fetch('api/absences.php').then(r => r.json()),
+                    fetch('api/inspections.php').then(r => r.json()),
+                    fetch('api/sanctions.php').then(r => r.json())
+                ]);
+
+                calculateKPIs(appels, notations, absences, inspections, sanctions);
+                displayNotationsParEtab(notations, etablissements);
+                displayAppelsTable(appels, etablissements);
+                displayDisciplineTable(absences, sanctions, etablissements);
+                displayInspectionsStats(inspections, etablissements);
+            } catch(e) {
+                console.error('Erreur analyses:', e);
+            }
+        }
+
+        function calculateKPIs(appels, notations, absences, inspections, sanctions) {
+            // Taux d'assiduité (appels réalisés)
+            const appelsData = appels.success ? appels.data : [];
+            const totalJours = appelsData.length;
+            const joursAvecAppels = appelsData.filter(a => a.total_eleves > 0).length;
+            const tauxAssi = totalJours > 0 ? Math.round((joursAvecAppels / totalJours) * 100) : 0;
+            document.getElementById('tauxAssiduite').textContent = tauxAssi + '%';
+
+            // Moyenne des notations
+            const notationsData = notations.success ? notations.data : [];
+            if (notationsData.length > 0) {
+                let sum = 0;
+                let count = 0;
+                notationsData.forEach(n => {
+                    if (n.note_totale && n.note_totale !== 'abs') {
+                        sum += parseFloat(n.note_totale);
+                        count++;
+                    }
+            });
+    const moy = count > 0 ? (sum / count).toFixed(1) : '—';
+    document.getElementById('moyenneNotations').textContent = moy + '/20';
+}
+
+            // Taux inspections réalisées
+            const inspData = inspections.success ? inspections.data : [];
+            const realisees = inspData.filter(i => i.statut === 'realisee').length;
+            const total = inspData.length;
+            const tauxInsp = total > 0 ? Math.round((realisees / total) * 100) : 0;
+            document.getElementById('tauxInspections').textContent = tauxInsp + '%';
+
+            // Taux sanctions
+            const sanctData = sanctions.success ? sanctions.data.filter(s => s.statut === 'active') : [];
+            const profsAvecSanction = new Set(sanctData.map(s => s.id_professeur)).size;
+            const totalProfs = professeurs.length;
+            const tauxSanc = totalProfs > 0 ? Math.round((profsAvecSanction / totalProfs) * 100) : 0;
+            document.getElementById('tauxSanctions').textContent = tauxSanc + '%';
+        }
+
+        function displayNotationsParEtab(notations, etabs) {
+            const container = document.getElementById('notationsEtabTable');
+            const notData = notations.success ? notations.data : [];
+            
+            if (!etabs.length || !notData.length) {
+                container.innerHTML = '<div class="empty-state">Aucune donnée de notation</div>';
+                return;
+            }
+
+            // Calculer moyenne par établissement
+            const stats = {};
+            etabs.forEach(e => {
+                stats[e.id_etablissement] = {
+                    nom: e.nom_etablissement,
+                    notations: [],
+                    nb_profs: professeurs.filter(p => p.id_etablissement == e.id_etablissement).length
+                };
+            });
+
+            notData.forEach(n => {
+                if (stats[n.id_etablissement]) {
+                    const moyennes = ['abdominaux', 'pompes', 'demi_cooper', 'souplesse', 'vitesse'];
+                    let sum = 0;
+                    let count = 0;
+                    moyennes.forEach(m => {
+                        if (n[m] && n[m] > 0) {
+                            sum += parseFloat(n[m]);
+                            count++;
+                        }
+                    });
+                    if (count > 0) {
+                        stats[n.id_etablissement].notations.push(sum / count);
+                    }
+                }
+            });
+
+            let html = '<table><thead><tr><th>Établissement</th><th>Nb Professeurs</th><th>Notations saisies</th><th>Moyenne générale</th><th>Performance</th></tr></thead><tbody>';
+            Object.values(stats).forEach(s => {
+                const nbNot = s.notations.length;
+                const moy = nbNot > 0 ? (s.notations.reduce((a, b) => a + b, 0) / nbNot).toFixed(1) : '—';
+                const perf = moy !== '—' ? (moy >= 15 ? '🟢 Excellente' : moy >= 12 ? '🟡 Bonne' : '🟠 À améliorer') : '—';
+                html += `<tr>
+                    <td><strong>${s.nom}</strong></td>
+                    <td>${s.nb_profs}</td>
+                    <td>${nbNot}</td>
+                    <td>${moy}</td>
+                    <td>${perf}</td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function displayAppelsTable(appels, etabs) {
+            const container = document.getElementById('appelsTable');
+            const appelsData = appels.success ? appels.data : [];
+            
+            if (!appelsData.length) {
+            // Option A : Utiliser des backticks (recommandé)
+                container.innerHTML = `<div class="empty-state">Aucune donnée d'appels</div>`; 
+                return;
+        }       
+
+            // Grouper par établissement
+            const stats = {};
+            etabs.forEach(e => {
+                stats[e.id_etablissement] = {
+                    nom: e.nom_etablissement,
+                    jours: 0,
+                    appels: 0
+                };
+            });
+
+            appelsData.forEach(a => {
+                if (stats[a.id_etablissement]) {
+                    stats[a.id_etablissement].jours++;
+                    if (a.total_eleves > 0) {
+                        stats[a.id_etablissement].appels++;
+                    }
+                }
+            });
+
+            let html = '<table><thead><tr><th>Établissement</th><th>Jours avec données</th><th>Appels réalisés</th><th>Taux de réalisation</th><th>Statut</th></tr></thead><tbody>';
+            Object.values(stats).forEach(s => {
+                const taux = s.jours > 0 ? Math.round((s.appels / s.jours) * 100) : 0;
+                const badge = taux >= 90 ? 'badge-active' : taux >= 70 ? 'badge-pending' : 'badge-inactive';
+                const status = taux >= 90 ? 'Excellent' : taux >= 70 ? 'Correct' : 'Insuffisant';
+                html += `<tr>
+                    <td><strong>${s.nom}</strong></td>
+                    <td>${s.jours}</td>
+                    <td>${s.appels}</td>
+                    <td><strong>${taux}%</strong></td>
+                    <td><span class="badge ${badge}">${status}</span></td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function displayDisciplineTable(absences, sanctions, etabs) {
+            const container = document.getElementById('disciplineTable');
+            const absData = absences.success ? absences.data : [];
+            const sanctData = sanctions.success ? sanctions.data : [];
+
+            // Stats par établissement
+            const stats = {};
+            etabs.forEach(e => {
+                stats[e.id_etablissement] = {
+                    nom: e.nom_etablissement,
+                    absences: 0,
+                    sanctions_actives: 0,
+                    nb_profs: professeurs.filter(p => p.id_etablissement == e.id_etablissement).length
+                };
+            });
+
+            absData.forEach(a => {
+                if (stats[a.id_etablissement]) {
+                    stats[a.id_etablissement].absences++;
+                }
+            });
+
+            sanctData.forEach(s => {
+                if (stats[s.id_etablissement] && s.statut === 'active') {
+                    stats[s.id_etablissement].sanctions_actives++;
+                }
+            });
+
+            let html = '<table><thead><tr><th>Établissement</th><th>Professeurs</th><th>Absences déclarées</th><th>Sanctions actives</th><th>Taux incident</th></tr></thead><tbody>';
+            Object.values(stats).forEach(s => {
+                const tauxIncident = s.nb_profs > 0 ? ((s.sanctions_actives / s.nb_profs) * 100).toFixed(1) : '0';
+                const color = tauxIncident < 5 ? '#18753C' : tauxIncident < 10 ? '#F57C00' : '#E1000F';
+                html += `<tr>
+                    <td><strong>${s.nom}</strong></td>
+                    <td>${s.nb_profs}</td>
+                    <td>${s.absences}</td>
+                    <td>${s.sanctions_actives}</td>
+                    <td><strong style="color:${color};">${tauxIncident}%</strong></td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function displayInspectionsStats(inspections, etabs) {
+            const container = document.getElementById('inspectionsStatsTable');
+            const inspData = inspections.success ? inspections.data : [];
+
+            const stats = {};
+            etabs.forEach(e => {
+                stats[e.id_etablissement] = {
+                    nom: e.nom_etablissement,
+                    pedagogique: 0,
+                    administrative: 0,
+                    autre: 0,
+                    realisees: 0,
+                    total: 0
+                };
+            });
+
+            inspData.forEach(i => {
+                if (stats[i.id_etablissement]) {
+                    stats[i.id_etablissement].total++;
+                    if (i.statut === 'realisee') stats[i.id_etablissement].realisees++;
+                    if (i.type_inspection === 'pedagogique') stats[i.id_etablissement].pedagogique++;
+                    if (i.type_inspection === 'administrative') stats[i.id_etablissement].administrative++;
+                    if (i.type_inspection === 'autre') stats[i.id_etablissement].autre++;
+                }
+            });
+
+            let html = '<table><thead><tr><th>Établissement</th><th>Total</th><th>Pédagogique</th><th>Administrative</th><th>Autre</th><th>Réalisées</th><th>Taux</th></tr></thead><tbody>';
+            Object.values(stats).forEach(s => {
+                const taux = s.total > 0 ? Math.round((s.realisees / s.total) * 100) : 0;
+                html += `<tr>
+                    <td><strong>${s.nom}</strong></td>
+                    <td>${s.total}</td>
+                    <td>${s.pedagogique}</td>
+                    <td>${s.administrative}</td>
+                    <td>${s.autre}</td>
+                    <td>${s.realisees}</td>
+                    <td><strong>${taux}%</strong></td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        async function loadStats() {
+            try {
+                // Établissements
+                const rE = await fetch('api/etablissements.php');
+                const dE = await rE.json();
+                const etabs = dE.success ? dE.data : [];
+                document.getElementById('statEtablissements').textContent = etabs.length;
+
+                // Professeurs
+                const rP = await fetch('api/professeurs.php');
+                const dP = await rP.json();
+                const profs = dP.success ? dP.data.filter(p => p.actif) : [];
+                document.getElementById('statProfesseurs').textContent = profs.length;
+
+                // Inspections
+                const rI = await fetch('api/inspections.php');
+                const dI = await rI.json();
+                const inspections = dI.success ? dI.data : [];
+                document.getElementById('statInspections').textContent = inspections.length;
+
+                // Sanctions
+                const rS = await fetch('api/sanctions.php');
+                const dS = await rS.json();
+                const sanctions = dS.success ? dS.data.filter(s => s.statut === 'active') : [];
+                document.getElementById('statSanctions').textContent = sanctions.length;
+
+                // Performance par établissement
+                displayPerformance(etabs, profs, inspections, sanctions);
+            } catch(e) { console.error('Erreur stats:', e); }
+        }
+
+        function displayPerformance(etabs, profs, inspections, sanctions) {
+            const container = document.getElementById('performanceTable');
+            if (!etabs.length) {
+                container.innerHTML = '<div class="empty-state">Aucun établissement</div>';
+                return;
+            }
+
+            let html = '<table><thead><tr><th>Établissement</th><th>Professeurs</th><th>Inspections</th><th>Sanctions</th><th>Statut</th></tr></thead><tbody>';
+            etabs.forEach(e => {
+                const nbProfs = profs.filter(p => p.id_etablissement == e.id_etablissement).length;
+                const nbInsp = inspections.filter(i => i.id_etablissement == e.id_etablissement).length;
+                const nbSanc = sanctions.filter(s => s.id_etablissement == e.id_etablissement).length;
+                html += `<tr>
+                    <td><strong>${e.nom_etablissement}</strong><br><small style="color:#666;">${e.ville}</small></td>
+                    <td>${nbProfs}</td>
+                    <td>${nbInsp}</td>
+                    <td>${nbSanc}</td>
+                    <td><span class="badge badge-active">Actif</span></td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        async function loadEtablissements() {
+            try {
+                const r = await fetch('api/etablissements.php');
+                const d = await r.json();
+                etablissements = d.success ? d.data : [];
+                displayEtablissements(etablissements);
+                
+                // Remplir le filtre
+                const sel = document.getElementById('filterEtabProf');
+                sel.innerHTML = '<option value="">Tous les établissements</option>';
+                etablissements.forEach(e => {
+                    sel.innerHTML += `<option value="${e.id_etablissement}">${e.nom_etablissement}</option>`;
+                });
+            } catch(e) { console.error('Erreur etablissements:', e); }
+        }
+
+        function displayEtablissements(etabs) {
+            const container = document.getElementById('etablissementsTable');
+            if (!etabs.length) {
+                container.innerHTML = '<div class="empty-state">Aucun établissement</div>';
+                return;
+            }
+            let html = '<table><thead><tr><th>Nom</th><th>Ville</th><th>Code Postal</th><th>Téléphone</th><th>Email</th></tr></thead><tbody>';
+            etabs.forEach(e => {
+                html += `<tr>
+                    <td><strong>${e.nom_etablissement}</strong></td>
+                    <td>${e.ville}</td>
+                    <td>${e.code_postal}</td>
+                    <td>${e.telephone || '—'}</td>
+                    <td>${e.email || '—'}</td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        async function loadProfesseurs() {
+            try {
+                let url = 'api/professeurs.php';
+                const filter = document.getElementById('filterEtabProf')?.value;
+                if (filter) url += `?id_etablissement=${filter}`;
+                
+                const r = await fetch(url);
+                const d = await r.json();
+                professeurs = d.success ? d.data : [];
+                displayProfesseurs(professeurs);
+            } catch(e) { console.error('Erreur professeurs:', e); }
+        }
+
+        function displayProfesseurs(profs) {
+            const container = document.getElementById('professeursTable');
+            if (!profs.length) {
+                container.innerHTML = '<div class="empty-state">Aucun professeur</div>';
+                return;
+            }
+            let html = '<table><thead><tr><th>Nom</th><th>Discipline</th><th>Établissement</th><th>Statut</th></tr></thead><tbody>';
+            profs.forEach(p => {
+                const badge = p.actif ? '<span class="badge badge-active">Actif</span>' : '<span class="badge badge-inactive">Inactif</span>';
+                html += `<tr>
+                    <td><strong>${p.nom} ${p.prenom}</strong></td>
+                    <td>${p.discipline_enseignee}</td>
+                    <td>${p.nom_etablissement}</td>
+                    <td>${badge}</td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        async function loadInspections() {
+            try {
+                const r = await fetch('api/inspections.php');
+                const d = await r.json();
+                displayInspections(d.success ? d.data : []);
+            } catch(e) { console.error('Erreur inspections:', e); }
+        }
+
+        function displayInspections(inspections) {
+            const container = document.getElementById('inspectionsTable');
+            if (!inspections.length) {
+                container.innerHTML = '<div class="empty-state">Aucune inspection</div>';
+                return;
+            }
+            const badgeStatut = s => ({
+                'en_attente': '<span class="badge badge-inactive">En attente</span>',
+                'programmee': '<span class="badge badge-pending">Programmée</span>',
+                'realisee':   '<span class="badge badge-active">Réalisée</span>'
+            }[s] || s);
+            let html = '<table><thead><tr><th>Date</th><th>Professeur</th><th>Établissement</th><th>Type</th><th>Statut</th></tr></thead><tbody>';
+            inspections.forEach(i => {
+                html += `<tr>
+                    <td>${new Date(i.date_demande).toLocaleDateString('fr-FR')}</td>
+                    <td>${i.prof_nom} ${i.prof_prenom}</td>
+                    <td>${i.nom_etablissement}</td>
+                    <td>${i.type_inspection}</td>
+                    <td>${badgeStatut(i.statut)}</td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        async function loadSanctions() {
+            try {
+                const r = await fetch('api/sanctions.php');
+                const d = await r.json();
+                displaySanctions(d.success ? d.data : []);
+            } catch(e) { console.error('Erreur sanctions:', e); }
+        }
+
+        function displaySanctions(sanctions) {
+            const container = document.getElementById('sanctionsTable');
+            if (!sanctions.length) {
+                container.innerHTML = '<div class="empty-state">Aucune sanction</div>';
+                return;
+            }
+            let html = '<table><thead><tr><th>Date</th><th>Professeur</th><th>Établissement</th><th>Type</th><th>Statut</th></tr></thead><tbody>';
+            sanctions.forEach(s => {
+                const badge = s.statut === 'active' ? 'badge-active' : s.statut === 'levee' ? 'badge-pending' : 'badge-inactive';
+                html += `<tr>
+                    <td>${new Date(s.date_sanction).toLocaleDateString('fr-FR')}</td>
+                    <td>${s.prof_nom} ${s.prof_prenom}</td>
+                    <td>${s.nom_etablissement}</td>
+                    <td>${s.type_sanction}</td>
+                    <td><span class="badge ${badge}">${s.statut}</span></td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // Agenda - fonctions simplifiées (à compléter si besoin)
+        function showAddEventModalRecteur() {
+            alert('Fonctionnalité agenda à venir');
+        }
+
+        checkSession();
+    </script>
+</body>
+</html>
