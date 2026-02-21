@@ -60,7 +60,7 @@ if ($method === 'GET') {
             $where_clauses[] = "p.id_etablissement = ?";
             $params[] = $_SESSION['id_etablissement'];
         }
-        if (isset($_GET['id_etablissement']) && has_role('DRH')) {
+        if (isset($_GET['id_etablissement']) && has_role('DRH', 'RECTEUR')) {
             $where_clauses[] = "p.id_etablissement = ?";
             $params[] = $_GET['id_etablissement'];
         }

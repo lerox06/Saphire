@@ -132,7 +132,7 @@ if ($method === 'POST' && !isset($_POST['_method'])) {
     }
     
     // Vérifier que le rôle est valide
-    $roles_valides = ['CE', 'CEA', 'DRH', 'GESTIONNAIRE', 'IA', 'IA_DASEN'];
+    $roles_valides = ['CE', 'CEA', 'DRH', 'GESTIONNAIRE', 'IA', 'IA_DASEN', 'RECTEUR'];
     if (!in_array($_POST['role'], $roles_valides)) {
         json_response(['success' => false, 'message' => 'Rôle invalide'], 400);
     }
