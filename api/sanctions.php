@@ -6,6 +6,7 @@
  */
 
 require_once '../config.php';
+require_once __DIR__ . '/email_config.php'; // <-- AJOUTEZ CETTE LIGNE ICI
 
 header('Content-Type: application/json');
 
@@ -15,14 +16,15 @@ if (!is_logged_in()) {
 
 // Professeurs : lecture seule de leurs propres sanctions
 $is_prof = has_role('PROFESSEUR');
+$is_ia   = has_role(['IA', 'IA_DASEN']);
 
-if (!has_role(['CE', 'CEA', 'DRH', 'IA_DASEN', 'IA', 'RECTEUR']) && !$is_prof) {
+if (!has_role(['CE', 'CEA', 'DRH']) && !$is_prof && !$is_ia) {
     json_response(['success' => false, 'message' => 'Accès non autorisé'], 403);
 }
 
-// Si prof : bloquer toute écriture
-if ($is_prof && $_SERVER['REQUEST_METHOD'] !== 'GET') {
-    json_response(['success' => false, 'message' => 'Lecture seule pour les professeurs'], 403);
+// Prof / IA : bloquer toute écriture
+if (($is_prof || $is_ia) && $_SERVER['REQUEST_METHOD'] !== 'GET') {
+    json_response(['success' => false, 'message' => 'Lecture seule'], 403);
 }
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -50,6 +52,12 @@ if ($method === 'GET') {
 
         // CE/CEA : uniquement leur établissement
         if (has_role(['CE', 'CEA'])) {
+            $where[]  = "p.id_etablissement = ?";
+            $params[] = $_SESSION['id_etablissement'];
+        }
+
+        // IA : uniquement leur établissement
+        if (has_role('IA')) {
             $where[]  = "p.id_etablissement = ?";
             $params[] = $_SESSION['id_etablissement'];
         }
@@ -131,6 +139,54 @@ if ($method === 'POST' && !isset($_POST['_method'])) {
         $id = $pdo->lastInsertId();
         log_activity($pdo, $_SESSION['user_id'], 'Sanction émise', 'sanctions', $id);
 
+                // Envoyer email au professeur + hiérarchie
+        try {
+            // Récupérer le professeur
+            $profStmt = $pdo->prepare("
+                SELECT p.*, u.email, e.id_etablissement 
+                FROM professeurs p 
+                JOIN utilisateurs u ON p.id_utilisateur = u.id_utilisateur 
+                JOIN etablissements e ON p.id_etablissement = e.id_etablissement 
+                WHERE p.id_professeur = ?
+            ");
+            $profStmt->execute([intval($_POST['id_professeur'])]);
+            $prof = $profStmt->fetch();
+            
+            if ($prof && !empty($prof['email'])) {
+                // Données de la sanction
+                $sanction = [
+                    'type_sanction' => $_POST['type_sanction'],
+                    'motif' => $_POST['motif'],
+                    'description' => $_POST['description'] ?? '',
+                    'date_sanction' => $_POST['date_sanction']
+                ];
+                
+                // Émetteur
+                $emetteur = [
+                    'prenom' => $_SESSION['prenom'],
+                    'nom' => $_SESSION['nom'],
+                    'role' => $_SESSION['role']
+                ];
+                
+                // Récupérer les responsables (DRH, IA_DASEN, IA, CE/CEA de l'établissement)
+                $respStmt = $pdo->prepare("
+                    SELECT u.email, u.prenom, u.nom, u.role 
+                    FROM utilisateurs u 
+                    WHERE (u.role IN ('DRH', 'IA_DASEN') 
+                           OR (u.role IN ('IA', 'CE', 'CEA') AND u.id_etablissement = ?))
+                      AND u.actif = 1 
+                      AND u.email IS NOT NULL
+                ");
+                $respStmt->execute([$prof['id_etablissement']]);
+                $responsables = $respStmt->fetchAll();
+                
+                // Envoyer l'email
+                EmailNotification::notifySanction($prof, $sanction, $emetteur, $responsables);
+            }
+        } catch (Exception $e) {
+            error_log("Erreur envoi email sanction: " . $e->getMessage());
+        }
+        
         json_response(['success' => true, 'message' => 'Sanction enregistrée', 'id' => $id], 201);
     } catch (PDOException $e) {
         json_response(['success' => false, 'message' => 'Erreur: ' . $e->getMessage()], 500);

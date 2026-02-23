@@ -7,6 +7,7 @@
 
 require_once '../config.php';
 
+
 header('Content-Type: application/json');
 
 if (!is_logged_in()) {

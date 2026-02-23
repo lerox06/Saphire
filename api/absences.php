@@ -5,6 +5,7 @@
  */
 
 require_once '../config.php';
+require_once __DIR__ . '/email_config.php'; // <-- AJOUTEZ CETTE LIGNE ICI
 
 header('Content-Type: application/json');
 
@@ -190,6 +191,24 @@ if ($method === 'POST' && !isset($_POST['_method'])) {
         
         $id = $pdo->lastInsertId();
         log_activity($pdo, $_SESSION['user_id'], 'Création absence', 'absences', $id);
+        
+                // Envoyer email au professeur
+        try {
+            $profStmt = $pdo->prepare("SELECT p.*, u.email FROM professeurs p JOIN utilisateurs u ON p.id_utilisateur = u.id_utilisateur WHERE p.id_professeur = ?");
+            $profStmt->execute([intval($_POST['id_professeur'])]);
+            $prof = $profStmt->fetch();
+            
+            if ($prof && !empty($prof['email'])) {
+                $absence = [
+                    'date_absence' => $_POST['date_absence'],
+                    'motif' => $_POST['motif'] ?? '',
+                    'duree_jours' => $_POST['duree_jours'] ?? 1
+                ];
+                EmailNotification::notifyAbsence($prof, $absence);
+            }
+        } catch (Exception $e) {
+            error_log("Erreur envoi email absence: " . $e->getMessage());
+        }
         
         json_response(['success' => true, 'message' => 'Absence enregistrée avec succès', 'id' => $id], 201);
     } catch (PDOException $e) {

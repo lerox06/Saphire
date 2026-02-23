@@ -6,6 +6,7 @@
  */
 
 require_once '../config.php';
+require_once __DIR__ . '/email_config.php'; // <-- AJOUTEZ CETTE LIGNE ICI
 
 header('Content-Type: application/json');
 
@@ -14,6 +15,11 @@ if (!is_logged_in()) {
 }
 
 $method = $_SERVER['REQUEST_METHOD'];
+
+// IA/IA_DASEN : lecture seule
+if (has_role(['IA', 'IA_DASEN']) && $method !== 'GET') {
+    json_response(['success' => false, 'message' => 'Lecture seule pour les inspecteurs'], 403);
+}
 
 // Fonction pour calculer la note totale
 function calculer_note_totale($note_appels, $note_cdt) {
@@ -60,7 +66,7 @@ if ($method === 'GET') {
             $where_clauses[] = "p.id_etablissement = ?";
             $params[] = $_SESSION['id_etablissement'];
         }
-        if (isset($_GET['id_etablissement']) && has_role('DRH', 'RECTEUR')) {
+        if (isset($_GET['id_etablissement']) && has_role('DRH')) {
             $where_clauses[] = "p.id_etablissement = ?";
             $params[] = $_GET['id_etablissement'];
         }
@@ -139,6 +145,39 @@ if ($method === 'POST' && !isset($_POST['_method'])) {
         ]);
         
         log_activity($pdo, $_SESSION['user_id'], 'Notation professeur', 'notations_hebdomadaires', $_POST['id_professeur']);
+        
+                // Envoyer email au professeur
+        try {
+            $profStmt = $pdo->prepare("
+                SELECT p.*, u.email, e.nom_etablissement 
+                FROM professeurs p 
+                JOIN utilisateurs u ON p.id_utilisateur = u.id_utilisateur 
+                JOIN etablissements e ON p.id_etablissement = e.id_etablissement 
+                WHERE p.id_professeur = ?
+            ");
+            $profStmt->execute([intval($_POST['id_professeur'])]);
+            $prof = $profStmt->fetch();
+            
+            if ($prof && !empty($prof['email'])) {
+                $notation = [
+                    'semaine' => $_POST['semaine'],
+                    'annee_scolaire' => $_POST['annee_scolaire'],
+                    'abdominaux' => $_POST['abdominaux'] ?? 0,
+                    'pompes' => $_POST['pompes'] ?? 0,
+                    'demi_cooper' => $_POST['demi_cooper'] ?? 0,
+                    'souplesse' => $_POST['souplesse'] ?? 0,
+                    'vitesse' => $_POST['vitesse'] ?? 0
+                ];
+                
+                $etablissement = [
+                    'nom_etablissement' => $prof['nom_etablissement']
+                ];
+                
+                EmailNotification::notifyNotations($prof, $notation, $etablissement);
+            }
+        } catch (Exception $e) {
+            error_log("Erreur envoi email notation: " . $e->getMessage());
+        }
         
         json_response(['success' => true, 'message' => 'Notation enregistrée avec succès', 'note_totale' => $note_totale], 201);
     } catch (PDOException $e) {
