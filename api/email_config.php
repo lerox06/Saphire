@@ -18,8 +18,8 @@
 define('SMTP_HOST', 'smtp.gmail.com');
 define('SMTP_PORT', 587); // 587 pour TLS (recommandé), 465 pour SSL
 define('SMTP_ENCRYPTION', 'tls'); // 'tls' ou 'ssl'
-define('SMTP_USERNAME', 'saphire@ac-sterling.fr'); // ← VOTRE EMAIL GOOGLE WORKSPACE
-define('SMTP_PASSWORD', 'tunxdafdhlxblvar'); // ← MOT DE PASSE D'APPLICATION (16 caractères)
+define('SMTP_USERNAME', 'saphire@'); // ← VOTRE EMAIL GOOGLE WORKSPACE
+define('SMTP_PASSWORD', ''); // ← MOT DE PASSE D'APPLICATION (16 caractères)
 define('SMTP_FROM_EMAIL', 'saphire@ac-sterling.fr');
 define('SMTP_FROM_NAME', 'Académie Sterling - Système RH');
 
